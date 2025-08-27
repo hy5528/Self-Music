@@ -198,6 +198,24 @@ export function Sidebar({ className }: SidebarProps) {
 
           {/* Footer */}
           <div className="p-4 space-y-3">
+            {/* Netlify Badge */}
+            {!isCollapsed && (
+              <div className="text-center">
+                <a 
+                  href="https://www.netlify.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block"
+                >
+                  <img 
+                    src="https://www.netlify.com/assets/badges/netlify-badge-color-accent.svg" 
+                    alt="Deploys by Netlify" 
+                    className="h-8"
+                  />
+                </a>
+              </div>
+            )}
+            
             {/* Admin Panel Link */}
             <div>
               <a href="/admin/login" onClick={() => setIsMobileOpen(false)}>
