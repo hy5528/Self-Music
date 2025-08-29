@@ -281,6 +281,14 @@ Self-Music/
 
 本项目采用 [MIT License](LICENSE) 开源协议。
 
+
+---
+
+## 特别感谢
+
+感谢 [@haorwen](https://github.com/haorwen) 为本项目提供网易云音乐元信息数据API服务。
+
+
 ---
 
 <div align="center">
@@ -290,10 +298,3 @@ Self-Music/
 Made with ❤️ for music lovers.
 
 </div>
-
-
----
-
-## 特别感谢
-
-感谢 [@haorwen](https://github.com/haorwen) 为本项目提供网易云音乐元信息数据API服务。

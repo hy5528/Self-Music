@@ -264,6 +264,13 @@ Self-Music/
 
 This project is licensed under the [MIT License](LICENSE).
 
+
+---
+
+## Special Thanks
+
+Thanks to [@haorwen](https://github.com/haorwen) for providing the NetEase Cloud Music metadata API service for this project.
+
 ---
 
 <div align="center">
@@ -273,9 +280,3 @@ This project is licensed under the [MIT License](LICENSE).
 Made with ❤️ for music lovers.
 
 </div>
-
----
-
-## Special Thanks
-
-Thanks to [@haorwen](https://github.com/haorwen) for providing the NetEase Cloud Music metadata API service for this project.
