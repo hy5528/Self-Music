@@ -7,7 +7,11 @@ export class CacheManager {
   private serviceWorkerReady: Promise<ServiceWorkerRegistration | null>;
 
   constructor() {
-    this.serviceWorkerReady = this.waitForServiceWorker();
+    if (typeof window !== 'undefined') {
+      this.serviceWorkerReady = this.waitForServiceWorker();
+    } else {
+      this.serviceWorkerReady = Promise.resolve(null);
+    }
   }
 
   static getInstance(): CacheManager {
@@ -18,7 +22,7 @@ export class CacheManager {
   }
 
   private async waitForServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-    if ('serviceWorker' in navigator) {
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.ready;
         return registration;
@@ -141,7 +145,7 @@ export class CacheManager {
    * Check if the app is offline
    */
   isOffline(): boolean {
-    return !navigator.onLine;
+    return typeof navigator !== 'undefined' && !navigator.onLine;
   }
 
   /**

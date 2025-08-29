@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   // Turbopack配置 (修复deprecated警告)
   turbopack: {
     rules: {

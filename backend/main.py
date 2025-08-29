@@ -1374,7 +1374,7 @@ async def batch_import(request: ImportBatchRequest, username: str = Depends(veri
     finally:
         conn.close()
 
+init_db()
 if __name__ == "__main__":
-    init_db()
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
