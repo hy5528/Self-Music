@@ -39,7 +39,7 @@ Self Music 是一个面向个人与小团队的音乐管理与播放系统。提
 
 ## 🚀 一键部署
 
-我们提供三种便捷的部署方式：`Docker Run` 和 `Docker Compose` 以及 [宝塔部署](#-快速开始)。
+我们提供三种便捷的部署方式：`Docker Run` 和 `Docker Compose` 以及 [宝塔+ Vercel 部署](#-快速开始)。
 
 ### 方式一：使用 Docker Run (推荐)
 
