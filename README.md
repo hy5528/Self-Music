@@ -286,7 +286,7 @@ Self-Music/
 
 ## 特别感谢
 
-感谢 [@haorwen](https://github.com/haorwen) 为本项目提供网易云音乐元信息数据API服务。
+感谢 [@haorwen](https://github.com/haorwen) 为本项目提供网易云音乐元信息数据 API 服务。
 
 
 ---
