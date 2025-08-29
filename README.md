@@ -272,7 +272,7 @@ Self-Music/
 ## 🤝 贡献
 
 - 提交前确保：构建通过、`pnpm lint` 通过、API 本地可运行
-- 遵循本仓库约定（见 `AGENTS.md`）
+- 遵循本仓库约定（见 `AGENTS.md`, `CODE_OF_CONDUCT.md`）
 - 欢迎：Bug 报告、功能提议、文档改进、国际化支持
 
 ---
