@@ -10,6 +10,10 @@ services:
     # Nginx will proxy requests to it.
     expose:
       - "8000"
+    volumes:
+      - ./backend/config.yaml:/app/config.yaml
+      - ./backend/music.db:/app/music.db
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build:

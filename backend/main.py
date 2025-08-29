@@ -16,14 +16,22 @@ import requests
 from datetime import datetime, timedelta
 from mutagen import File as MutagenFile
 import mimetypes
+import yaml
 
 # Import user routes
 from user import router as user_router
 
+# Load config
+try:
+    with open('config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+except FileNotFoundError:
+    config = {}
+
 app = FastAPI(title="Self-Music API", version="1.0.0")
 security = HTTPBearer()
 
-SECRET_KEY = "your-secret-key-change-this-in-production"
+SECRET_KEY = config.get('jwt_secret', "your-secret-key-change-this-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 12
 
@@ -301,16 +309,40 @@ def init_db():
         )
     ''')
     
-    # Insert default admin user
-    admin_id = str(uuid.uuid4())
-    admin_password = hashlib.sha256("admin123".encode()).hexdigest()
-    try:
-        conn.execute('''
-            INSERT OR IGNORE INTO users (id, username, password, role, createdAt)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (admin_id, "admin", admin_password, "admin", datetime.now().isoformat()))
-    except:
-        pass
+    # Update or Insert default admin user based on config
+    admin_config = config.get('admin', {})
+    admin_username = admin_config.get('username', 'admin')
+    admin_password_plain = admin_config.get('password') # Can be None
+
+    if admin_username and admin_password_plain:
+        admin_password_hashed = hashlib.sha256(admin_password_plain.encode()).hexdigest()
+        
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM users WHERE username = ?', (admin_username,))
+        user_exists = cursor.fetchone()
+
+        if user_exists:
+            # Update existing admin password
+            cursor.execute('UPDATE users SET password = ? WHERE username = ?', (admin_password_hashed, admin_username))
+        else:
+            # Insert new admin user if it doesn't exist
+            admin_id = str(uuid.uuid4())
+            cursor.execute('''
+                INSERT INTO users (id, username, password, role, createdAt)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (admin_id, admin_username, admin_password_hashed, "admin", datetime.now().isoformat()))
+    elif not admin_password_plain:
+        # Fallback to old behavior if password is not set in config, to not break existing setups
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM users WHERE username = ?', (admin_username,))
+        user_exists = cursor.fetchone()
+        if not user_exists:
+            admin_id = str(uuid.uuid4())
+            admin_password = hashlib.sha256("admin123".encode()).hexdigest()
+            conn.execute('''
+                INSERT OR IGNORE INTO users (id, username, password, role, createdAt)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (admin_id, "admin", admin_password, "admin", datetime.now().isoformat()))
     
     # Migrate existing song-artist relationships
     try:
