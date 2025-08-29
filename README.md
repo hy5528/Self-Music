@@ -23,6 +23,7 @@
 
 **🌟 一个现代化的私人音乐管理与播放系统，支持播放列表、歌词同步与多端访问。（支持一键导入网易云音乐元数据，批量搜刮的私人音乐客户端）**
 
+[🚀 一键部署](#-一键部署)
 [🚀 快速开始](#-快速开始) •
 [✨ 功能特性](#-功能特性) •
 [🛠️ 技术栈](#️-技术栈) •
@@ -32,18 +33,109 @@
 
 ---
 
+## 📖 项目简介
+
+Self Music 是一个面向个人与小团队的音乐管理与播放系统。提供优雅的 UI 与流畅的播放体验，支持播放列表管理、歌词同步、艺术家/专辑数据浏览，并内置后台管理（JWT 认证），开箱即用。
+
+## 🚀 一键部署
+
+我们提供三种便捷的部署方式：`Docker Run` 和 `Docker Compose` 以及 [宝塔部署](#-快速开始)。
+
+### 方式一：使用 Docker Run (推荐)
+
+这是最简单快捷的启动方式。只需一条命令即可运行整个应用。
+
+**国内服务器推荐 (使用加速镜像):**
 ```bash
 docker run -d \
-  --name new-my-music-app \
+  --name my-music-app \
   --restart unless-stopped \
   -p 6230:80 \
   -v "$(pwd)/music_data":/data \
   docker.cnb.cool/onmicrosoft/self-music:latest
 ```
 
-## 📖 项目简介
+**海外服务器或本地 (使用 Docker Hub 官方镜像):**
+```bash
+docker run -d \
+  --name my-music-app \
+  --restart unless-stopped \
+  -p 6230:80 \
+  -v "$(pwd)/music_data":/data \
+  zkeq/self-music:latest
+```
+- 启动后，应用将在 `http://localhost:6230` 访问。
+- 所有数据（数据库、配置文件、音乐文件）将保存在当前目录下的 `music_data` 文件夹中（修改密码后重启项目即可，会自动更新密码）。
+- 默认管理员账号：`admin` / `admin123`。
 
-Self Music 是一个面向个人与小团队的音乐管理与播放系统。提供优雅的 UI 与流畅的播放体验，支持播放列表管理、歌词同步、艺术家/专辑数据浏览，并内置后台管理（JWT 认证），开箱即用。
+### 方式二：使用 Docker Compose
+
+如果您需要更灵活的配置或进行二次开发，可以使用 `docker-compose`。
+
+1.  **克隆本项目**
+    ```bash
+    git clone https://github.com/zkeq/Self-music.git
+    cd Self-music
+    ```
+
+2.  **启动服务**
+    ```bash
+    docker-compose up -d
+    ```
+- 启动后，应用将在 `http://localhost:8080` 访问。
+
+---
+
+## ✨ 功能特性
+
+- **现代 UI**: 基于 shadcn/ui + Tailwind CSS 4 的精美界面，支持明暗主题切换。
+- **完整播放体验**: 支持播放队列、LRC 歌词同步滚动、随机/循环播放模式。
+- **多维度浏览**: 按艺术家、专辑、播放列表、情绪等多种方式发现音乐。
+- **强大后台管理**: 内置后台管理系统，支持对歌曲、艺术家、播放列表等的完整 CRUD 操作。
+- **数据持久化**: 所有数据均通过卷（Volume）持久化，方便备份和迁移。
+
+---
+
+## 🛠️ 技术栈
+
+- **后端**: FastAPI (Python) + SQLite
+- **前端**: Next.js (React) + TypeScript + Tailwind CSS
+- **容器化**: Docker + Nginx
+
+---
+
+## 🔧 本地开发
+
+如果需要进行二次开发，请按以下步骤设置本地环境。
+
+1.  **环境要求**
+    - Python 3.8+
+    - Node.js 18+
+    - pnpm (推荐)
+
+2.  **克隆项目**
+    ```bash
+    git clone https://github.com/zkeq/Self-music.git
+    cd Self-music
+    ```
+
+3.  **启动后端**
+    ```bash
+    cd backend
+    pip install -r requirements.txt
+    uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    ```
+    - 后端服务运行于 `http://localhost:8000`
+
+4.  **启动前端**
+    ```bash
+    cd ../frontend
+    pnpm install
+    pnpm dev
+    ```
+    - 前端服务运行于 `http://localhost:3000`
+
+---
 
 ### 🎯 核心亮点
 
