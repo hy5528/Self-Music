@@ -1,13 +1,21 @@
-#+ 🎵 Self Music - Personal Music Library
+# 🎵 Self Music - Personal Music System
 
-![Self Music Banner](https://img.shields.io/badge/Self%20Music-🎶-ff69b4?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+- Preview: https://music.icodeq.com
+
+![Screenshot (616)](https://img.onmicrosoft.cn/zkeq/20250817125324565.png)
+![Screenshot (617)](https://img.onmicrosoft.cn/zkeq/20250817125724096.png)
+![Screenshot (618)](https://img.onmicrosoft.cn/zkeq/20250817125723943.png)
+![Screenshot (619)](https://img.onmicrosoft.cn/zkeq/20250817125723887.png)
+![Screenshot (621)](https://img.onmicrosoft.cn/zkeq/20250817125729741.png)
+![Screenshot (620)](https://img.onmicrosoft.cn/zkeq/20250817125727225.png)
+![Screenshot (624)](https://img.onmicrosoft.cn/zkeq/20250817125723840.png)
+![Screenshot (623)](https://img.onmicrosoft.cn/zkeq/20250817125723806.png)
 
 <div align="center">
 
-**🌟 A modern personal music management and playback system with playlists, synced lyrics, and responsive UI.**
+**🌟 A modern private music management and playback system, supporting playlists, lyrics synchronization, and multi-device access. (A private music client that supports one-click import of NetEase Cloud Music metadata and batch scraping.)**
 
+[🚀 One-Click Deploy](#-one-click-deploy) •
 [🚀 Quick Start](#-quick-start) •
 [✨ Features](#-features) •
 [🛠️ Tech Stack](#️-tech-stack) •
@@ -17,113 +25,186 @@
 
 ---
 
-## 📖 Overview
+## 📖 Introduction
 
-Self Music is a personal music system designed for individuals or small teams. It offers an elegant UI, smooth playback, playlist management, synced lyrics, and public browsing of artists/albums/playlists. An admin console with JWT authentication is built in.
+Self Music is a music management and playback system for individuals and small teams. It provides an elegant UI and a smooth playback experience, supports playlist management, lyrics synchronization, artist/album data browsing, and has a built-in admin backend (JWT authentication), ready to use out of the box.
 
-### 🎯 Highlights
+## 🚀 One-Click Deploy
 
-- 🎨 Modern UI: shadcn/ui + Tailwind CSS 4
-- 📱 Responsive Layout: desktop and mobile friendly
-- 🔐 Secure Admin: JWT-protected admin console
-- 🎧 Playback: HTML5 audio with LRC/plaintext lyric parsing and synchronized scrolling
-- 🎛️ Controls: progress, volume, shuffle, repeat, previous/next
-- 🌓 Theme: light/dark modes via next-themes
+We offer three convenient deployment methods: `Docker Run`, `Docker Compose`, and [Pagoda Panel Deployment](#-quick-start).
+
+### Method 1: Using Docker Run (Recommended)
+
+This is the easiest and fastest way to get started. You can run the entire application with just one command.
+
+**Recommended for servers in China (using accelerated mirror):**
+```bash
+docker run -d \
+  --name self-music-app \
+  --restart unless-stopped \
+  -p 6230:80 \
+  -v "$(pwd)/music_data":/data \
+  docker.cnb.cool/onmicrosoft/self-music:latest
+```
+
+**For overseas servers or local development (using official Docker Hub image):**
+```bash
+docker run -d \
+  --name self-music-app \
+  --restart unless-stopped \
+  -p 6230:80 \
+  -v "$(pwd)/music_data":/data \
+  zkeq/self-music:latest
+```
+- After starting, the application will be accessible at `http://localhost:6230`.
+- All data (database, configuration files, music files) will be saved in the `music_data` folder in the current directory (restart the project after changing the password to update it automatically).
+- Default administrator account: `admin` / `admin123`.
+
+### Method 2: Using Docker Compose
+
+If you need more flexible configuration or want to do secondary development, you can use `docker-compose`.
+
+1.  **Clone this project**
+    ```bash
+    git clone https://github.com/zkeq/Self-music.git
+    cd Self-music
+    ```
+
+2.  **Start the service**
+    ```bash
+    docker-compose up -d
+    ```
+- After starting, the application will be accessible at `http://localhost:8080`.
+
+---
+
+## ✨ Features
+
+- **Modern UI**: A beautiful interface based on shadcn/ui + Tailwind CSS 4, with support for light and dark theme switching.
+- **Complete Playback Experience**: Supports playback queue, LRC lyrics synchronized scrolling, and random/loop playback modes.
+- **Multi-dimensional Browsing**: Discover music by artist, album, playlist, mood, and more.
+- **Powerful Admin Panel**: Built-in admin system with full CRUD operations for songs, artists, playlists, etc.
+- **Data Persistence**: All data is persisted via volumes, making backups and migrations easy.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: FastAPI (Python) + SQLite
+- **Frontend**: Next.js (React) + TypeScript + Tailwind CSS
+- **Containerization**: Docker + Nginx
+
+---
+
+## 🔧 Local Development
+
+If you need to do secondary development, please set up your local environment as follows.
+
+1.  **Prerequisites**
+    - Python 3.8+
+    - Node.js 18+
+    - pnpm (recommended)
+
+2.  **Clone the project**
+    ```bash
+    git clone https://github.com/zkeq/Self-music.git
+    cd Self-music
+    ```
+
+3.  **Start the backend**
+    ```bash
+    cd backend
+    pip install -r requirements.txt
+    uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    ```
+    - The backend service runs at `http://localhost:8000`
+
+4.  **Start the frontend**
+    ```bash
+    cd ../frontend
+    pnpm install
+    pnpm dev
+    ```
+    - The frontend service runs at `http://localhost:3000`
+
+---
+
+### 🎯 Core Highlights
+
+- 🎨 Modern Design: Beautiful interface based on shadcn/ui + Tailwind CSS 4
+- 📱 Responsive Layout: Seamlessly adapts to desktop and mobile
+- 🔐 Secure Authentication: JWT-based login for the admin panel
+- 🎧 Playback Experience: HTML5 audio + lyrics (LRC) parsing and synchronized scrolling
+- 🎛️ Playback Controls: Progress, volume, shuffle, loop, previous/next
+- 🌓 Theme Switching: Built-in dark mode (next-themes)
 
 ---
 
 ## ✨ Features
 
 ### 🎛 Playback & Experience
-- 🎵 Playlists: queue support, play from list, jump to song
-- 📝 Lyrics: LRC/plain text parsing, full-screen lyrics with scrolling highlight
-- 🔁 Modes: shuffle / list repeat / single repeat
-- 💾 Local persistence: playlist and state via localStorage
-- ⚡ Streaming: backend serves local audio files with `Accept-Ranges`
+- 🎵 Playlists: Supports playback queue, playing from a list, and jumping to a specific song
+- 📝 Lyrics Support: LRC/plain text parsing, supports full-screen lyrics with scrolling highlight
+- 🔁 Playback Modes: Shuffle / list loop / single loop
+- 💾 Local Storage: Playlists and state are persisted in localStorage
 
-### 🎭 Browse & Categories
-- 👤 Artists: list/detail, artist songs and albums
-- 💿 Albums: list/detail, album songs
-- 📂 Playlists: browse public playlists and play
-- 😊 Moods: mood-based categorization (backend support)
+### 🎭 Browsing & Categorization
+- 👤 Artists: List and details, songs/albums by the artist
+- 💿 Albums: List and details, songs within an album
+- 📂 Playlists: Browse and play public playlists
+- 😊 Mood/Atmosphere: Display and filter by mood (backend support)
 
-### 🛠 Admin Console (/admin)
-- ✅ Full CRUD for artists, albums, songs, moods, playlists
-- 🔃 Playlist reorder: maintain custom order in responses
-- ⬆️ File upload: audio file uploads stored under `/uploads`
-- 📦 Batch import: import song/album/artist with lyrics and audio URLs
-- 👤 Default admin: `admin / admin123`
+### 🛠 Admin Panel (/admin)
+- ✅ Artists/Albums/Songs/Moods/Playlists: Full CRUD
+- 🔃 Playlist Reordering: Supports custom ordering (returns in the saved order)
+- 📦 Batch Import: Batch write song/album/artist information (including lyrics and audio URLs)
+- 👤 Default Admin: `admin / admin123`
 
-### 🔐 Security
-- 🛡️ JWT auth: Bearer token for admin endpoints
-- 🌐 CORS: permissive in dev; restrict in production
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-- 🐍 FastAPI `^0.104`
-- 🚀 Uvicorn `^0.24`
-- 💾 SQLite (`backend/music.db`)
-- 🔐 PyJWT + HTTP Bearer
-- 🎼 Mutagen (audio metadata)
-- 📦 python-multipart (uploads)
-
-### Frontend
-- ⚛️ Next.js `15.4.x` + React `19`
-- 📘 TypeScript `^5`
-- 🎨 Tailwind CSS `4`
-- 🧩 shadcn/ui + Radix UI
-- 🗃 Zustand (state)
-- 🌗 next-themes (theme)
-- 🎬 framer-motion (animation)
+### 🔐 Security Features
+- 🛡️ JWT Authentication: Bearer Token for protected admin APIs
+- 🌐 CORS Settings: Allows all origins by default
 
 ---
 
 ## 🚀 Quick Start
 
-### 📋 Requirements
-- 🐍 Python 3.8+
-- 📦 Node.js 18+
-- 🔧 Package manager: pnpm (or npm)
+### ☁️ Cloud Server Deployment (Backend) [Using Pagoda Panel]
 
-### 1) Clone
-```bash
-git clone https://github.com/zkeq/Self-music.git
-cd Self-music
-```
+1. Upload the `backend` folder to the `/root` directory on your server.
+   <img width="2005" height="776" alt="image" src="https://github.com/user-attachments/assets/4da357c8-ba77-4bfb-bc1f-fecd4f122349" />
 
-### 2) Backend (FastAPI)
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
-- API: `http://localhost:8000`
-- Docs: `http://localhost:8000/docs`
-- Default admin: `admin / admin123`
+2. Change the `jwt secret` to a random string in `main.py`.
+   ![image-20250817131014518](https://img.onmicrosoft.cn/zkeq/20250817131014618.png)
 
-> In production, configure a secure `SECRET_KEY` and restrict CORS to trusted origins.
+3. Change the default admin account and password in `main.py`.
+   ![image-20250817131115205](https://img.onmicrosoft.cn/zkeq/20250817131115307.png)
 
-### 3) Frontend (Next.js)
-```bash
-cd ../frontend
-pnpm install   # or npm install
-# Optional (defaults to http://localhost:8000/api):
-# echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api" > .env.local
-pnpm dev       # or npm run dev
-```
-- App: `http://localhost:3000`
+4. Open Pagoda Panel -> Websites -> `Python Project` -> `Add Site`.
+   Create a new virtual environment.
+   ![image-20250731101721616](https://img.onmicrosoft.cn/zkeq/20250731101721697.png)
 
-### 4) Key Routes
-- 🏠 Home: `/`
-- 🎧 Player: `/play` and `/play/[id]`
-- 🎵 Songs: `/songs`
-- 👤 Artists: `/artists` and `/artist/[id]`
-- 💿 Albums: `/albums` (if enabled)
-- 📂 Playlists: `/playlists` and `/playlist/[id]`
-- 🔐 Admin Login: `/admin/login`
+5. Fill out the form as shown below.
+   ![image-20250731101757603](https://img.onmicrosoft.cn/zkeq/20250731101757694.png)
+
+6. After clicking confirm, the project will create the virtual environment and install dependencies. Wait for the installation to complete.
+
+7. Click on settings to view the project log.
+   ![image-20250731101900749](https://img.onmicrosoft.cn/zkeq/20250731101900862.png)
+
+8. If you get an error that a dependency is not found, click on `Terminal` in the `Actions` column and manually enter `pip install xxx (package name)`. If it says the port is occupied, change to an unused port in `main.py`.
+   ![image-20250731102037862](https://img.onmicrosoft.cn/zkeq/20250731102037989.png)
+
+9.  Request the service port to check the running status. (If you see this string, the service is running normally).
+    ![image-20250731102123918](https://img.onmicrosoft.cn/zkeq/20250731102123995.png)
+
+10. The backend deployment is complete. You can now set up a reverse proxy with a domain on your CDN to go live.
+
+### ☁️ Vercel Deployment (Frontend)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fzkeq%2FSelf-Music%2Ftree%2Fmain%2Ffrontend&env=NEXT_PUBLIC_API_URL&envDescription=%E5%90%8E%E7%AB%AF%E9%A1%B9%E7%9B%AE%E5%9C%B0%E5%9D%80%EF%BC%88%E7%A4%BA%E4%BE%8B%3A%20https%3A%2F%2Fmusic-api.onmicrosoft.cn%2Fapi%EF%BC%89%EF%BC%9A&project-name=self-music&repository-name=self-music)
+
+- Follow the steps to deploy successfully.
+<img width="2093" height="1284" alt="image" src="https://github.com/user-attachments/assets/f6a370cc-b9e6-47d7-a7d2-20d83951bbaa" />
 
 ---
 
@@ -131,90 +212,64 @@ pnpm dev       # or npm run dev
 
 ```
 Self-Music/
-├── backend/
-│   ├── main.py
-│   ├── user.py
-│   ├── music.db
-│   └── requirements.txt
-├── frontend/
+├── backend/                 # FastAPI + SQLite
+│   ├── main.py              # API entrypoint (includes admin routes)
+│   ├── user.py              # Public-facing user APIs
+│   ├── music.db             # SQLite database
+│   └── requirements.txt     # Python dependencies
+├── frontend/                # Next.js + TypeScript + Tailwind CSS 4
 │   ├── src/
-│   │   ├── app/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   └── styles/
-│   └── package.json
-├── AGENTS.md
-├── README.md        # Chinese
-└── README.en.md     # English (this file)
+│   │   ├── app/             # App routes (/play, /artists, /admin, etc.)
+│   │   ├── components/      # UI components, player, lyrics, panels
+│   │   ├── lib/             # API client, store, utils
+│   │   └── styles/          # Global styles and themes
+│   └── package.json         # Frontend dependencies and scripts
+├── AGENTS.md                # Repository contribution and development guidelines (Chinese)
+├── README.md                # Chinese README (this file)
+└── README.en.md             # English README
 ```
 
 ---
 
-## 📚 API Summary (sample)
+## 📚 API Overview (Excerpt)
 
-- Public
-  - `GET /api/songs` • `GET /api/songs/{id}` • `GET /api/songs/{id}/stream`
-  - `GET /api/artists` • `GET /api/artists/{id}` • `GET /api/artists/{id}/songs` • `GET /api/artists/{id}/albums`
-  - `GET /api/albums` • `GET /api/albums/{id}` • `GET /api/albums/{id}/songs`
-  - `GET /api/playlists` • `GET /api/playlists/{id}`
+- Public APIs (no login required)
+  - `GET /api/songs`: Get songs with pagination
+  - `GET /api/songs/{id}`: Song details
+  - `GET /api/songs/{id}/stream`: Audio stream
+  - `GET /api/artists`, `/api/artists/{id}`, `/api/artists/{id}/songs`, `/api/artists/{id}/albums`
+  - `GET /api/albums`, `/api/albums/{id}`, `/api/albums/{id}/songs`
+  - `GET /api/playlists`, `/api/playlists/{id}`
 
-- Admin (Bearer token)
-  - `POST /api/auth/login`
-  - CRUD at `/api/admin/{artists|albums|songs|moods|playlists}`
-  - `PUT /api/admin/playlists/{id}/reorder`
-  - `POST /api/admin/upload`
-  - `POST /api/admin/import/*`
+- Admin APIs (requires Bearer Token)
+  - `POST /api/auth/login`: Admin login
+  - `GET/POST/PUT/DELETE /api/admin/{artists|albums|songs|moods|playlists}`
+  - `PUT /api/admin/playlists/{id}/reorder`: Reorder playlist
+  - `POST /api/admin/upload`: Upload audio file
+  - `POST /api/admin/import/*`: Batch import and duplicate check
 
-> See Swagger at `/docs` when backend is running.
-
----
-
-## 🐛 Troubleshooting
-
-- Backend fails to start
-  - Check Python version and dependencies
-  - Ensure port `8000` is free
-- Audio not playing
-  - `songs.audioUrl` must be a valid local path
-  - File exists and server can read it
-- CORS errors
-  - Dev is permissive; restrict origins in production
-- CSS issues
-  - Reinstall deps or verify Tailwind setup
-
----
-
-## 🚀 Deployment
-
-- Backend
-  - Run with `uvicorn`/`gunicorn` behind Nginx/Caddy
-  - Configure `SECRET_KEY`, restrict CORS, persist `music.db` and `uploads/`
-- Frontend
-  - Any static host or Vercel
-  - Set `NEXT_PUBLIC_API_URL` to your API, e.g., `https://api.example.com/api`
+> See the Swagger docs at `/docs` after running the backend for details.
 
 ---
 
 ## 🤝 Contributing
 
-- Ensure builds pass, `pnpm lint` is clean, and API runs locally
-- Follow repository conventions in `AGENTS.md`
-- Welcome: bug reports, feature requests, docs improvements, i18n
+- Before submitting, ensure: builds pass, `pnpm lint` passes, API runs locally
+- Follow the repository conventions (see `AGENTS.md`)
+- Contributions are welcome: Bug reports, feature proposals, documentation improvements, internationalization support
 
 ---
 
 ## 📄 License
 
-MIT License — see [LICENSE](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
 <div align="center">
 
-**⭐ If you find this project useful, please star it! ⭐**
+**⭐ If this project helps you, please give it a star! ⭐**
 
 Made with ❤️ for music lovers.
 
 </div>
-
-wake vercel. 001
