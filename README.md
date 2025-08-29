@@ -48,7 +48,7 @@ Self Music 是一个面向个人与小团队的音乐管理与播放系统。提
 **国内服务器推荐 (使用加速镜像):**
 ```bash
 docker run -d \
-  --name my-music-app \
+  --name self-music-app \
   --restart unless-stopped \
   -p 6230:80 \
   -v "$(pwd)/music_data":/data \
@@ -58,7 +58,7 @@ docker run -d \
 **海外服务器或本地 (使用 Docker Hub 官方镜像):**
 ```bash
 docker run -d \
-  --name my-music-app \
+  --name self-music-app \
   --restart unless-stopped \
   -p 6230:80 \
   -v "$(pwd)/music_data":/data \
@@ -174,27 +174,6 @@ docker run -d \
 
 ---
 
-## 🛠️ 技术栈
-
-### 后端
-- 🐍 FastAPI `^0.104`：现代、高性能 API 框架
-- 🚀 Uvicorn `^0.24`：ASGI 服务器
-- 💾 SQLite：轻量级持久化存储（`backend/music.db`）
-- 🔐 PyJWT + HTTP Bearer：认证与鉴权
-- 🎼 Mutagen：音频元数据解析（用于时长等）
-- 📦 python-multipart：文件上传
-
-### 前端
-- ⚛️ Next.js `15.4.x` + React `19`
-- 📘 TypeScript `^5`
-- 🎨 Tailwind CSS `4`
-- 🧩 shadcn/ui + Radix UI
-- 🗃 Zustand（状态管理）
-- 🌗 next-themes（主题切换）
-- 🎬 framer-motion（动效）
-
----
-
 ## 🚀 快速开始
 
 ### ☁️ 云服务器部署 （后端）[使用宝塔部署]
@@ -245,50 +224,6 @@ docker run -d \
 
 <img width="2093" height="1284" alt="image" src="https://github.com/user-attachments/assets/f6a370cc-b9e6-47d7-a7d2-20d83951bbaa" />
 
-
-
-### 📋 环境要求
-- 🐍 Python 3.8+
-- 📦 Node.js 18+
-- 🔧 包管理器：推荐 pnpm（或 npm）
-
-### 1) 克隆项目
-```bash
-git clone https://github.com/zkeq/Self-music.git
-cd Self-music
-```
-
-### 2) 启动后端（FastAPI）
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
-- 后端地址：`http://localhost:8000`
-- 文档地址：`http://localhost:8000/docs`
-- 默认管理员：`admin / admin123`
-
-> 生产环境请通过环境变量或安全配置提供 `SECRET_KEY`，并收敛 CORS 到可信来源。
-
-### 3) 启动前端（Next.js）
-```bash
-cd ../frontend
-pnpm install   # 或 npm install
-# 配置环境变量（可选，默认：http://localhost:8000/api）
-# echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api" > .env.local
-pnpm dev       # 或 npm run dev
-```
-- 前端地址：`http://localhost:3000`
-
-### 4) 主要页面
-- 🏠 首页：`/`
-- 🎧 播放页：`/play` 与 `/play/[id]`
-- 🎵 歌曲列表：`/songs`
-- 👤 艺术家：`/artists` 与 `/artist/[id]`
-- 💿 专辑：`/albums`（如有启用）
-- 📂 播放列表：`/playlists` 与 `/playlist/[id]`
-- 🔐 管理后台登录：`/admin/login`
-
 ---
 
 ## 📁 项目结构
@@ -332,32 +267,6 @@ Self-Music/
   - `POST /api/admin/import/*`：批量导入与查重
 
 > 详见运行后端后的 Swagger 文档：`/docs`
-
----
-
-## 🐛 故障排除
-
-- 后端无法启动
-  - 确认 Python 版本与依赖安装无误
-  - 检查端口 `8000` 是否被占用
-- 音频无法播放
-  - 数据库 `songs.audioUrl` 是否为有效本地路径
-  - 目标文件存在且后端有读权限
-- CORS 问题
-  - 开发默认放开；生产需将允许来源限制到前端域名
-- 样式异常
-  - 删除 `node_modules` 后重装依赖，或检查 Tailwind 配置
-
----
-
-## 🚀 部署建议
-
-- 后端
-  - 使用 `uvicorn`/`gunicorn` + 反向代理（Nginx/Caddy）
-  - 配置 `SECRET_KEY`、收敛 CORS、持久化 `music.db` 与 `uploads/`
-- 前端
-  - 任何静态服务或 Vercel 等平台
-  - 设置环境变量 `NEXT_PUBLIC_API_URL` 指向后端 API（如 `https://api.example.com/api`）
 
 ---
 
