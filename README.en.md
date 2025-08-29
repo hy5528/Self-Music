@@ -35,7 +35,7 @@ We offer three convenient deployment methods: `Docker Run`, `Docker Compose`, an
 
 ### Method 1: Using Docker Run (Recommended)
 
-This is the easiest and fastest way to get started. You can run the entire application with just one command.
+This is the easiest and fastest way to get started. You can run the entire application with just one command. (Note that due to data persistence requirements, the directory in which the command is started must be the same each time it is executed. It is recommended to execute it in the `~` directory).
 
 **Recommended for servers in China (using accelerated mirror):**
 ```bash
@@ -273,3 +273,9 @@ This project is licensed under the [MIT License](LICENSE).
 Made with ❤️ for music lovers.
 
 </div>
+
+---
+
+## Special Thanks
+
+Thanks to [@haorwen](https://github.com/haorwen) for providing the NetEase Cloud Music metadata API service for this project.
