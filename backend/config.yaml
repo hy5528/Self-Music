@@ -7,4 +7,4 @@ jwt_secret: "a_very_random_and_secure_secret_key_change_me"
 # If the user does not exist, a new admin user will be created.
 admin:
   username: "admin"
-  password: "new_strong_password"
+  password: "admin123"
