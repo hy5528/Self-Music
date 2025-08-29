@@ -254,7 +254,6 @@ Self-Music/
 - 公共接口（无需登录）
   - `GET /api/songs`：分页获取歌曲
   - `GET /api/songs/{id}`：歌曲详情
-  - `GET /api/songs/{id}/stream`：音频流
   - `GET /api/artists`、`/api/artists/{id}`、`/api/artists/{id}/songs`、`/api/artists/{id}/albums`
   - `GET /api/albums`、`/api/albums/{id}`、`/api/albums/{id}/songs`
   - `GET /api/playlists`、`/api/playlists/{id}`
