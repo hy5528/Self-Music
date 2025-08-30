@@ -182,39 +182,36 @@ docker run -d \
 
   <img width="2005" height="776" alt="image" src="https://github.com/user-attachments/assets/4da357c8-ba77-4bfb-bc1f-fecd4f122349" />
 
-2. 修改 `jwt secret` 为一串随机字符串 `main.py`
+2. 修改 `backend/config.yaml` 里面的配置项 `jwt_secret` 和 `admin` 管理员密码。
 
-   ![image-20250817131014518](https://img.onmicrosoft.cn/zkeq/20250817131014618.png)
+<img width="1638" height="1011" alt="image" src="https://github.com/user-attachments/assets/2a5497bd-2b1e-4923-8806-6e215f97b9ea" />
 
-3. 修改默认管理员账号，默认管理员密码 `main.py`
 
-   ![image-20250817131115205](https://img.onmicrosoft.cn/zkeq/20250817131115307.png)
-
-4. 打开宝塔 网站 -> `Ptython项目` -> `新建站点`
+3. 打开宝塔 网站 -> `Ptython项目` -> `新建站点`
 
    新建一个虚拟环境
 
    ![image-20250731101721616](https://img.onmicrosoft.cn/zkeq/20250731101721697.png)
 
-5. 表单按如下填写
+4. 表单按如下填写
 
    ![image-20250731101757603](https://img.onmicrosoft.cn/zkeq/20250731101757694.png)
 
-6. 点击确定后项目会进行创建虚拟环境和安装，等待安装完毕 即可
+5. 点击确定后项目会进行创建虚拟环境和安装，等待安装完毕 即可
 
-7. 点击设置可查看项目日志
+6. 点击设置可查看项目日志
 
    ![image-20250731101900749](https://img.onmicrosoft.cn/zkeq/20250731101900862.png)
 
-8. 在这一步如果提示找不到某个依赖，点击 `操作` 中的 `终端`，自行输入 `pip install xxx(包名)` 即可，若提示端口被占用 （更改一个没有被占用的端口即可 `main.py`）
+7. 在这一步如果提示找不到某个依赖，点击 `操作` 中的 `终端`，自行输入 `pip install xxx(包名)` 即可，若提示端口被占用 （更改一个没有被占用的端口即可 `main.py`）
 
    ![image-20250731102037862](https://img.onmicrosoft.cn/zkeq/20250731102037989.png)
 
-9.  请求服务端口，查看运行情况 （看到这个字符串，说明服务正常运行）
+8.  请求服务端口，查看运行情况 （看到这个字符串，说明服务正常运行）
 
    ![image-20250731102123918](https://img.onmicrosoft.cn/zkeq/20250731102123995.png)
 
-10. 后端部署已完成，可在cdn测绑定反代域名即可上线
+9. 后端部署已完成，可在cdn测绑定反代域名即可上线
 
 ### ☁️  Vercel 部署 （前端）
 
