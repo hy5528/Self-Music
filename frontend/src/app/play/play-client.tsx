@@ -16,8 +16,14 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { AmbientGlow } from '@/components/ambient-glow';
 import { api } from '@/lib/api';
 import { PlaylistPanel } from '@/components/playlist-panel';
+import { isModernBrowser } from '@/lib/utils';
 
 export default function PlayClient() {
+  const [isModern, setIsModern] = useState(true);
+
+  useEffect(() => {
+    setIsModern(isModernBrowser());
+  }, []);
   // 自动加载默认歌曲
   useDefaultSongLoader();
 
@@ -280,10 +286,11 @@ export default function PlayClient() {
   return (
     <div className="h-full bg-background relative overflow-hidden lg:flex">
       {/* Dynamic Ambient Glow Background */}
-      <AmbientGlow 
-        imageUrl={currentSong?.coverUrl || displaySong.coverUrl} 
+      <AmbientGlow
+        imageUrl={currentSong?.coverUrl || displaySong.coverUrl}
         intensity="medium"
-        className="fixed inset-0 z-0" 
+        animated={isModern}
+        className="fixed inset-0 z-0"
       />
       
       {/* Sidebar - Mobile: Fixed overlay, Desktop: Takes layout space */}
