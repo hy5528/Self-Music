@@ -31,7 +31,7 @@ Self Music is a music management and playback system for individuals and small t
 
 ## 🚀 One-Click Deploy
 
-We offer three convenient deployment methods: `Docker Run`, `Docker Compose`, and [Pagoda Panel Deployment](#-quick-start).
+We offer three convenient deployment methods: `Docker Run`, `Docker Compose`, and [BT Panel Deployment](#-quick-start).
 
 ### Method 1: Using Docker Run (Recommended)
 
@@ -168,7 +168,7 @@ If you need to do secondary development, please set up your local environment as
 
 ## 🚀 Quick Start
 
-### ☁️ Cloud Server Deployment (Backend) [Using Pagoda Panel]
+### ☁️ Cloud Server Deployment (Backend) [Using BT Panel]
 
 1. Upload the `backend` folder to the `/root` directory on your server.
 
