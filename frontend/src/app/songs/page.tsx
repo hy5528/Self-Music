@@ -60,7 +60,7 @@ const formatFollowers = (count: number) => {
 export default function SongsPage() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(24);
+  const [pageSize, setPageSize] = useState(24);
   const [sortBy, setSortBy] = useState('created_desc');
   
   // Store hooks
@@ -100,6 +100,19 @@ export default function SongsPage() {
   
   const { setSong, play, replacePlaylistAndPlay, currentSong } = usePlayerStore();
   const [copiedSongId, setCopiedSongId] = useState<string | null>(null);
+
+  // Load songs data when page, pageSize or sortBy changes
+  useEffect(() => {
+    const updatePageSize = () => {
+      const newPageSize = window.innerWidth < 1024 ? 12 : 24;
+      setPageSize(newPageSize);
+    };
+
+    updatePageSize();
+    window.addEventListener('resize', updatePageSize);
+
+    return () => window.removeEventListener('resize', updatePageSize);
+  }, []);
 
   // Load songs data when page, pageSize or sortBy changes
   useEffect(() => {
@@ -453,17 +466,17 @@ export default function SongsPage() {
                       </div>
                     ) : (
                       <div className="grid gap-6 lg:grid-cols-2">
-                        {/* 第一个表格 - 前12首歌曲 */}
+                        {/* 统一的歌曲列表 */}
                         <div className="bg-card rounded-lg shadow-sm">
                           <div className="flex items-center px-4 py-3 text-sm text-muted-foreground border-b">
                             <div className="w-8">#</div>
-                            <div className="flex-1">标题</div>
+                            <div className="flex-1 min-w-0">标题</div>
                             <div className="w-20 text-right hidden lg:block">播放次数</div>
                             <div className="w-20 text-right">时长</div>
                           </div>
                           
                           {songs.slice(0, 12).map((song, index) => (
-                            <div 
+                            <div
                               key={song.id}
                               className="flex items-center px-4 py-3 hover:bg-muted/50 cursor-pointer group transition-colors"
                               onClick={() => handlePlaySong(song)}
@@ -473,15 +486,15 @@ export default function SongsPage() {
                                 <PlayCircle className="w-4 h-4 hidden group-hover:block text-primary" />
                               </div>
                               
-                              <div className="flex items-center flex-1 min-w-0">
-                                <img 
-                                  src={getOptimizedImageUrl(song.coverUrl, 'CARD_SMALL')} 
+                              <div className="flex items-center flex-1 min-w-0 mr-2">
+                                <img
+                                  src={getOptimizedImageUrl(song.coverUrl, 'CARD_SMALL')}
                                   alt={song.title}
-                                  className="w-10 h-10 rounded mr-3 object-cover"
+                                  className="w-10 h-10 rounded mr-3 object-cover flex-shrink-0"
                                 />
-                                <div className="min-w-0">
-                                  <div className="font-medium truncate">{song.title}</div>
-                                  <div className="text-sm text-muted-foreground truncate">{song.artist?.name}</div>
+                                <div className="min-w-0 max-w-[150px] sm:max-w-[200px] lg:max-w-xs">
+                                  <p className="font-medium truncate">{song.title}</p>
+                                  <p className="text-sm text-muted-foreground truncate">{song.artist?.name}</p>
                                 </div>
                               </div>
                               
@@ -489,10 +502,10 @@ export default function SongsPage() {
                                 {formatPlayCount(song.playCount)}
                               </div>
                               
-                              <div className="w-24 flex items-center justify-end text-sm text-muted-foreground space-x-2">
+                              <div className="w-16 sm:w-24 flex items-center justify-end text-sm text-muted-foreground space-x-2">
                                 <button
                                   onClick={(e) => handleShareSong(song, e)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block"
                                   title="分享歌曲"
                                   aria-label="分享歌曲"
                                 >
@@ -508,18 +521,18 @@ export default function SongsPage() {
                           ))}
                         </div>
 
-                        {/* 第二个表格 - 后12首歌曲 (仅在电脑端显示且有足够歌曲时) */}
-                        {songs.length > 12 && (
+                        {/* 第二个表格 - 仅在电脑端显示且有足够歌曲时 */}
+                        {pageSize === 24 && songs.length > 12 && (
                           <div className="bg-card rounded-lg shadow-sm hidden lg:block">
                             <div className="flex items-center px-4 py-3 text-sm text-muted-foreground border-b">
                               <div className="w-8">#</div>
-                              <div className="flex-1">标题</div>
+                              <div className="flex-1 min-w-0">标题</div>
                               <div className="w-20 text-right">播放次数</div>
                               <div className="w-20 text-right">时长</div>
                             </div>
                             
                             {songs.slice(12, 24).map((song, index) => (
-                              <div 
+                              <div
                                 key={song.id}
                                 className="flex items-center px-4 py-3 hover:bg-muted/50 cursor-pointer group transition-colors"
                                 onClick={() => handlePlaySong(song)}
@@ -529,15 +542,15 @@ export default function SongsPage() {
                                   <PlayCircle className="w-4 h-4 hidden group-hover:block text-primary" />
                                 </div>
                                 
-                                <div className="flex items-center flex-1 min-w-0">
-                                  <img 
-                                    src={getOptimizedImageUrl(song.coverUrl, 'CARD_SMALL')} 
+                                <div className="flex items-center flex-1 min-w-0 mr-2">
+                                  <img
+                                    src={getOptimizedImageUrl(song.coverUrl, 'CARD_SMALL')}
                                     alt={song.title}
-                                    className="w-10 h-10 rounded mr-3 object-cover"
+                                    className="w-10 h-10 rounded mr-3 object-cover flex-shrink-0"
                                   />
-                                  <div className="min-w-0">
-                                    <div className="font-medium truncate">{song.title}</div>
-                                    <div className="text-sm text-muted-foreground truncate">{song.artist?.name}</div>
+                                  <div className="min-w-0 max-w-[135px] sm:max-w-[200px] lg:max-w-xs">
+                                    <p className="font-medium truncate">{song.title}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{song.artist?.name}</p>
                                   </div>
                                 </div>
                                 
@@ -548,7 +561,7 @@ export default function SongsPage() {
                                 <div className="w-24 flex items-center justify-end text-sm text-muted-foreground space-x-2">
                                   <button
                                     onClick={(e) => handleShareSong(song, e)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block"
                                     title="分享歌曲"
                                     aria-label="分享歌曲"
                                   >
