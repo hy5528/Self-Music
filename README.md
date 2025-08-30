@@ -180,11 +180,11 @@ docker run -d \
 
 1. 将 `backend` 文件夹上传至服务器 `\root` 即可
 
-  <img width="2005" height="776" alt="image" src="https://github.com/user-attachments/assets/4da357c8-ba77-4bfb-bc1f-fecd4f122349" />
+![478884422-4da357c8-ba77-4bfb-bc1f-fecd4f122349](https://img.onmicrosoft.cn/zkeq/20250830095833542.png)
 
 2. 修改 `backend/config.yaml` 里面的配置项 `jwt_secret` 和 `admin` 管理员密码。
 
-<img width="1638" height="1011" alt="image" src="https://github.com/user-attachments/assets/2a5497bd-2b1e-4923-8806-6e215f97b9ea" />
+![483839127-2a5497bd-2b1e-4923-8806-6e215f97b9ea](https://img.onmicrosoft.cn/zkeq/20250830095846596.png)
 
 
 3. 打开宝塔 网站 -> `Ptython项目` -> `新建站点`

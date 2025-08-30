@@ -171,33 +171,34 @@ If you need to do secondary development, please set up your local environment as
 ### ☁️ Cloud Server Deployment (Backend) [Using Pagoda Panel]
 
 1. Upload the `backend` folder to the `/root` directory on your server.
-   <img width="2005" height="776" alt="image" src="https://github.com/user-attachments/assets/4da357c8-ba77-4bfb-bc1f-fecd4f122349" />
 
-2. Change the `jwt secret` to a random string in `main.py`.
-   ![image-20250817131014518](https://img.onmicrosoft.cn/zkeq/20250817131014618.png)
+![478884422-4da357c8-ba77-4bfb-bc1f-fecd4f122349](https://img.onmicrosoft.cn/zkeq/20250830095833542.png)
 
-3. Change the default admin account and password in `main.py`.
-   ![image-20250817131115205](https://img.onmicrosoft.cn/zkeq/20250817131115307.png)
 
-4. Open Pagoda Panel -> Websites -> `Python Project` -> `Add Site`.
+2. Modify the configuration items `jwt_secret` and the password of the `admin` administrator in `backend/config.yaml`.
+
+![483839127-2a5497bd-2b1e-4923-8806-6e215f97b9ea](https://img.onmicrosoft.cn/zkeq/20250830095846596.png)
+
+
+3. Open Pagoda Panel -> Websites -> `Python Project` -> `Add Site`.
    Create a new virtual environment.
    ![image-20250731101721616](https://img.onmicrosoft.cn/zkeq/20250731101721697.png)
 
-5. Fill out the form as shown below.
+4. Fill out the form as shown below.
    ![image-20250731101757603](https://img.onmicrosoft.cn/zkeq/20250731101757694.png)
 
-6. After clicking confirm, the project will create the virtual environment and install dependencies. Wait for the installation to complete.
+5. After clicking confirm, the project will create the virtual environment and install dependencies. Wait for the installation to complete.
 
-7. Click on settings to view the project log.
+6. Click on settings to view the project log.
    ![image-20250731101900749](https://img.onmicrosoft.cn/zkeq/20250731101900862.png)
 
-8. If you get an error that a dependency is not found, click on `Terminal` in the `Actions` column and manually enter `pip install xxx (package name)`. If it says the port is occupied, change to an unused port in `main.py`.
+7. If you get an error that a dependency is not found, click on `Terminal` in the `Actions` column and manually enter `pip install xxx (package name)`. If it says the port is occupied, change to an unused port in `main.py`.
    ![image-20250731102037862](https://img.onmicrosoft.cn/zkeq/20250731102037989.png)
 
-9.  Request the service port to check the running status. (If you see this string, the service is running normally).
+8.  Request the service port to check the running status. (If you see this string, the service is running normally).
     ![image-20250731102123918](https://img.onmicrosoft.cn/zkeq/20250731102123995.png)
 
-10. The backend deployment is complete. You can now set up a reverse proxy with a domain on your CDN to go live.
+9. The backend deployment is complete. You can now set up a reverse proxy with a domain on your CDN to go live.
 
 ### ☁️ Vercel Deployment (Frontend)
 
