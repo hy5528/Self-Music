@@ -157,7 +157,7 @@ class ImportArtistInfo(BaseModel):
 
 class ImportBatchItem(BaseModel):
     songInfo: ImportSongInfo
-    albumInfo: ImportAlbumInfo
+    albumInfo: Optional[ImportAlbumInfo] = None
     artistsInfo: List[ImportArtistInfo]
     lyrics: str
     audioUrl: str  # 添加音频URL字段
