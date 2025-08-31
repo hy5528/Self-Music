@@ -141,10 +141,10 @@ class ImportSongInfo(BaseModel):
 
 class ImportAlbumInfo(BaseModel):
     id: int
-    title: str
-    artist: str
-    coverUrl: str
-    releaseDate: str
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    coverUrl: Optional[str] = None
+    releaseDate: Optional[str] = None
     company: Optional[str] = None
     description: Optional[str] = None
 
@@ -1324,7 +1324,7 @@ async def batch_import(request: ImportBatchRequest, username: str = Depends(veri
                 
                 # 导入或获取专辑
                 album_id = None
-                if album_info:
+                if album_info and album_info.title and primary_artist_id:
                     # 检查专辑是否已存在（基于标题和主艺术家）
                     cursor.execute('''
                         SELECT id FROM albums WHERE title = ? AND artistId = ?
