@@ -13,7 +13,17 @@ export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(true); // 默认设置为 true，避免在客户端检查前闪烁
+
+  useEffect(() => {
+    // 在客户端检查 localStorage，以确定是否已关闭提示
+    const dismissed = localStorage.getItem('installPromptDismissed') === 'true';
+    if (dismissed) {
+      setIsDismissed(true);
+    } else {
+      setIsDismissed(false);
+    }
+  }, []);
 
   useEffect(() => {
     // 检查是否已安装
@@ -88,7 +98,8 @@ export function InstallPrompt() {
   const handleDismiss = () => {
     setShowInstallPrompt(false);
     setIsDismissed(true);
-    // 不再设置重新显示的定时器
+    // 将关闭状态持久化到 localStorage
+    localStorage.setItem('installPromptDismissed', 'true');
   };
 
   // 如果已安装、已关闭过或没有安装提示，不显示组件
