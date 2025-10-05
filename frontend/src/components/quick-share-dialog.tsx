@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import type { Song, MusicMoment } from '@/types';
 import { momentsAPI } from '@/lib/moments-api';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 
 interface QuickShareDialogProps {
   isOpen: boolean;
@@ -20,7 +20,9 @@ interface QuickShareDialogProps {
 
 export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShareDialogProps) {
   const [content, setContent] = useState('');
-  const [tags, setTags] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
   const [energyLevel, setEnergyLevel] = useState([0]);
   const [firstHeardYear, setFirstHeardYear] = useState('');
   const [firstHeardPeriod, setFirstHeardPeriod] = useState('');
@@ -30,6 +32,13 @@ export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShar
   const [existingMoment, setExistingMoment] = useState<MusicMoment | null>(null);
   const [isFirstShare, setIsFirstShare] = useState(true);
 
+  // 加载可用标签
+  useEffect(() => {
+    if (isOpen) {
+      loadAvailableTags();
+    }
+  }, [isOpen]);
+
   // 检查这首歌是否已经有朋友圈
   useEffect(() => {
     if (isOpen && song) {
@@ -37,6 +46,17 @@ export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShar
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, song]);
+
+  const loadAvailableTags = async () => {
+    try {
+      const response = await momentsAPI.getTags();
+      if (response.success) {
+        setAvailableTags(response.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load tags:', error);
+    }
+  };
 
   const checkExistingMoment = async () => {
     if (!song) return;
@@ -56,6 +76,29 @@ export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShar
     }
   };
 
+  const toggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const addNewTag = () => {
+    const newTag = newTagInput.trim();
+    if (newTag && !selectedTags.includes(newTag)) {
+      setSelectedTags([...selectedTags, newTag]);
+      if (!availableTags.includes(newTag)) {
+        setAvailableTags([...availableTags, newTag]);
+      }
+      setNewTagInput('');
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setSelectedTags(selectedTags.filter(t => t !== tag));
+  };
+
   const handleSubmit = async () => {
     if (!song || !content.trim()) return;
 
@@ -66,7 +109,7 @@ export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShar
         await momentsAPI.createMoment({
           songId: song.id,
           content: content.trim(),
-          tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+          tags: selectedTags,
           energyLevel: energyLevel[0],
           firstHeardYear: firstHeardYear ? parseInt(firstHeardYear) : undefined,
           firstHeardPeriod: firstHeardPeriod.trim() || undefined
@@ -82,7 +125,8 @@ export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShar
 
       // Reset form
       setContent('');
-      setTags('');
+      setSelectedTags([]);
+      setNewTagInput('');
       setEnergyLevel([0]);
       setFirstHeardYear('');
       setFirstHeardPeriod('');
@@ -159,13 +203,77 @@ export function QuickShareDialog({ isOpen, onClose, song, onSuccess }: QuickShar
             <>
               {/* Tags */}
               <div className="space-y-2">
-                <Label htmlFor="tags">标签</Label>
-                <Input
-                  id="tags"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="震撼, 治愈, 回忆 (逗号分隔)"
-                />
+                <Label>标签</Label>
+
+                {/* Selected tags */}
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-2 rounded-md bg-muted/50">
+                    {selectedTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs"
+                      >
+                        #{tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="hover:bg-primary/20 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Available tags */}
+                {availableTags.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">选择已有标签：</p>
+                    <div className="flex flex-wrap gap-2">
+                      {availableTags.map((tag) => (
+                        <Button
+                          key={tag}
+                          type="button"
+                          variant={selectedTags.includes(tag) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleTag(tag)}
+                          className="h-7 text-xs"
+                        >
+                          #{tag}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add new tag */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">或添加新标签：</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addNewTag();
+                        }
+                      }}
+                      placeholder="输入新标签"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addNewTag}
+                      disabled={!newTagInput.trim()}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               {/* Energy Level */}

@@ -164,10 +164,10 @@ export function Sidebar({ className }: SidebarProps) {
           <Separator />
 
           {/* Navigation */}
-          <nav 
+          <nav
             suppressHydrationWarning
             className={cn(
-              "flex-1 space-y-1 p-4 transition-all",
+              "flex-1 space-y-1 p-4 transition-all overflow-hidden",
               isCollapsed && "p-2"
             )}
           >

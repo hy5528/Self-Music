@@ -9,6 +9,8 @@ import { Heart } from 'lucide-react';
 import { usePlayerStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Sidebar } from '@/components/sidebar';
+import { MomentsFilterBar } from '@/components/moments-filter-bar';
+import { Pagination } from '@/components/ui/pagination';
 
 export default function MomentsPage() {
   const [moments, setMoments] = useState<MusicMoment[]>([]);
@@ -16,30 +18,55 @@ export default function MomentsPage() {
   const [error, setError] = useState<string | null>(null);
   const { replacePlaylistAndPlay } = usePlayerStore();
 
+  // 筛选和分页状态
+  const [filters, setFilters] = useState({
+    tags: [] as string[],
+    energyLevel: null as number | null,
+    year: null as number | null,
+    period: null as string | null
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     loadMoments();
-  }, []);
+  }, [filters, currentPage]);
 
   const loadMoments = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await momentsAPI.getMoments();
+      const response = await momentsAPI.getMoments({
+        page: currentPage,
+        limit: pageSize,
+        tags: filters.tags.length > 0 ? filters.tags.join(',') : undefined,
+        energyLevel: filters.energyLevel ?? undefined,
+        year: filters.year ?? undefined,
+        period: filters.period || undefined
+      });
       console.log('Moments response:', response);
 
-      if (response && response.success) {
-        // 后端返回格式: { success: true, data: [...] }
-        // 而不是 { success: true, data: { data: [...] } }
-        const momentsData = Array.isArray(response.data) ? response.data : [];
-        console.log('Moments data:', momentsData);
-        setMoments(momentsData);
+      if (response && response.success && response.data) {
+        setMoments(response.data);
+
+        // 更新总页数
+        if (response.totalPages) {
+          setTotalPages(response.totalPages);
+        } else if (response.total) {
+          setTotalPages(Math.ceil(response.total / pageSize));
+        } else {
+          setTotalPages(1);
+        }
       } else {
         setMoments([]);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error('Failed to load moments:', error);
       setError(error instanceof Error ? error.message : '加载失败');
       setMoments([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
@@ -48,9 +75,17 @@ export default function MomentsPage() {
   const handlePlaySong = async (moment: MusicMoment) => {
     if (!moment.songId) return;
     try {
-      const songResponse = await api.getSong(moment.songId);
-      if (songResponse.success && songResponse.data) {
-        replacePlaylistAndPlay([songResponse.data], 0);
+      // 获取当前页所有歌曲
+      const songPromises = moments.map(m => api.getSong(m.songId));
+      const songResponses = await Promise.all(songPromises);
+      const songs = songResponses
+        .filter(res => res.success && res.data)
+        .map(res => res.data!);
+
+      if (songs.length > 0) {
+        // 找到点击歌曲的索引
+        const clickedSongIndex = songs.findIndex(song => song.id === moment.songId);
+        replacePlaylistAndPlay(songs, clickedSongIndex >= 0 ? clickedSongIndex : 0);
       }
     } catch (error) {
       console.error('Failed to play song:', error);
@@ -65,6 +100,20 @@ export default function MomentsPage() {
     } catch (error) {
       console.error('Failed to like moment:', error);
     }
+  };
+
+  const handleFilterChange = (key: keyof typeof filters, value: string[] | number | null | string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setCurrentPage(1); // 筛选时重置到第一页
+  };
+
+  const handleResetFilters = () => {
+    setFilters({ tags: [], energyLevel: null, year: null, period: null });
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const getEnergyLevelText = (level: number) => {
@@ -221,12 +270,39 @@ export default function MomentsPage() {
 
       {/* Main Content - 铺满屏幕，左右两列瀑布流 */}
       <div className="flex-1 overflow-hidden pb-24">
-        <div className="h-full overflow-y-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="h-full overflow-y-auto px-6 py-6 flex flex-col gap-6">
+          {/* 标题和筛选栏 */}
+          <div className="space-y-4">
             <h1 className="text-3xl font-bold">音乐朋友圈</h1>
+
+            <MomentsFilterBar
+              tags={filters.tags}
+              energyLevel={filters.energyLevel}
+              year={filters.year}
+              period={filters.period}
+              onTagsChange={(value) => handleFilterChange('tags', value)}
+              onEnergyLevelChange={(value) => handleFilterChange('energyLevel', value)}
+              onYearChange={(value) => handleFilterChange('year', value)}
+              onPeriodChange={(value) => handleFilterChange('period', value)}
+              onReset={handleResetFilters}
+            />
           </div>
 
-          {renderContent()}
+          {/* 内容区域 */}
+          <div className="flex-1">
+            {renderContent()}
+          </div>
+
+          {/* 分页 */}
+          {!isLoading && !error && moments.length > 0 && totalPages > 1 && (
+            <div className="pb-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

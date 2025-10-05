@@ -8,6 +8,7 @@ export interface MomentFilters {
   tags?: string;
   energyLevel?: number;
   year?: number;
+  period?: string;
 }
 
 class MomentsAPI {
@@ -19,7 +20,7 @@ class MomentsAPI {
     };
   }
 
-  async getMoments(filters?: MomentFilters): Promise<ApiResponse<PaginatedResponse<MusicMoment>>> {
+  async getMoments(filters?: MomentFilters): Promise<PaginatedResponse<MusicMoment> & { success: boolean }> {
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -96,6 +97,25 @@ class MomentsAPI {
       headers: this.getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to delete comment');
+    return response.json();
+  }
+
+  // Filter options methods
+  async getTags(): Promise<ApiResponse<string[]>> {
+    const response = await fetch(`${API_BASE_URL}/moments/filters/tags`);
+    if (!response.ok) throw new Error('Failed to fetch tags');
+    return response.json();
+  }
+
+  async getYears(): Promise<ApiResponse<number[]>> {
+    const response = await fetch(`${API_BASE_URL}/moments/filters/years`);
+    if (!response.ok) throw new Error('Failed to fetch years');
+    return response.json();
+  }
+
+  async getPeriods(): Promise<ApiResponse<string[]>> {
+    const response = await fetch(`${API_BASE_URL}/moments/filters/periods`);
+    if (!response.ok) throw new Error('Failed to fetch periods');
     return response.json();
   }
 }
