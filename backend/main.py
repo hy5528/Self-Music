@@ -128,6 +128,34 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+# Music Moments Models
+class MomentComment(BaseModel):
+    id: Optional[str] = None
+    momentId: Optional[str] = None
+    content: str
+    listenDate: Optional[str] = None
+    location: Optional[str] = None
+    createdAt: Optional[str] = None
+
+class MomentCommentCreate(BaseModel):
+    """用于创建评论的请求体（不包含 momentId，从路径参数获取）"""
+    content: str
+    listenDate: Optional[str] = None
+    location: Optional[str] = None
+
+class MusicMoment(BaseModel):
+    id: Optional[str] = None
+    songId: str
+    content: str
+    tags: List[str] = []
+    energyLevel: int = 0  # -5 to +5, negative = restoring, positive = consuming
+    firstHeardYear: Optional[int] = None
+    firstHeardPeriod: Optional[str] = None
+    likeCount: int = 0
+    comments: List[MomentComment] = []
+    createdAt: Optional[str] = None
+    updatedAt: Optional[str] = None
+
 # Import related models
 class ImportSongInfo(BaseModel):
     songId: int
@@ -173,6 +201,28 @@ class CheckExistsRequest(BaseModel):
 
 class PlaylistReorder(BaseModel):
     songIds: List[str]
+
+# Music Moments models
+class MomentComment(BaseModel):
+    id: Optional[str] = None
+    momentId: str
+    content: str
+    listenDate: Optional[str] = None
+    location: Optional[str] = None
+    createdAt: Optional[str] = None
+
+class MusicMoment(BaseModel):
+    id: Optional[str] = None
+    songId: str
+    content: str
+    tags: List[str] = []
+    energyLevel: int = 0  # -5 to +5, negative = restoring, positive = consuming
+    firstHeardYear: Optional[int] = None
+    firstHeardPeriod: Optional[str] = None
+    likeCount: int = 0
+    comments: List[MomentComment] = []
+    createdAt: Optional[str] = None
+    updatedAt: Optional[str] = None
 
 # Database setup
 def init_db():
@@ -306,6 +356,36 @@ def init_db():
             FOREIGN KEY (albumId) REFERENCES albums (id) ON DELETE CASCADE,
             FOREIGN KEY (artistId) REFERENCES artists (id) ON DELETE CASCADE,
             UNIQUE(albumId, artistId)
+        )
+    ''')
+
+    # Music Moments table
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS music_moments (
+            id TEXT PRIMARY KEY,
+            songId TEXT NOT NULL,
+            content TEXT NOT NULL,
+            tags TEXT,
+            energyLevel INTEGER DEFAULT 0,
+            firstHeardYear INTEGER,
+            firstHeardPeriod TEXT,
+            likeCount INTEGER DEFAULT 0,
+            createdAt TEXT,
+            updatedAt TEXT,
+            FOREIGN KEY (songId) REFERENCES songs (id) ON DELETE CASCADE
+        )
+    ''')
+
+    # Moment Comments table
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS moment_comments (
+            id TEXT PRIMARY KEY,
+            momentId TEXT NOT NULL,
+            content TEXT NOT NULL,
+            listenDate TEXT,
+            location TEXT,
+            createdAt TEXT,
+            FOREIGN KEY (momentId) REFERENCES music_moments (id) ON DELETE CASCADE
         )
     ''')
     
@@ -1197,7 +1277,181 @@ async def reorder_playlist_songs(playlist_id: str, reorder_data: PlaylistReorder
     
     return {"success": True, "message": "Playlist order updated successfully"}
 
-# File upload endpoint
+# Music Moments CRUD
+@app.get("/api/admin/moments")
+async def get_moments_admin(username: str = Depends(verify_token)):
+    """管理员获取所有音乐朋友圈"""
+    conn = sqlite3.connect('music.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT m.*, s.title, s.coverUrl, ar.name as artist_name
+        FROM music_moments m
+        JOIN songs s ON m.songId = s.id
+        JOIN artists ar ON s.artistId = ar.id
+        ORDER BY m.createdAt DESC
+    ''')
+    rows = cursor.fetchall()
+
+    moments = []
+    for row in rows:
+        moment_id = row[0]
+
+        # Get comments for this moment
+        cursor.execute('''
+            SELECT * FROM moment_comments WHERE momentId = ? ORDER BY createdAt ASC
+        ''', (moment_id,))
+        comment_rows = cursor.fetchall()
+
+        comments = []
+        for c_row in comment_rows:
+            comments.append({
+                "id": c_row[0],
+                "momentId": c_row[1],
+                "content": c_row[2],
+                "listenDate": c_row[3],
+                "location": c_row[4],
+                "createdAt": c_row[5]
+            })
+
+        moment = {
+            "id": row[0],
+            "songId": row[1],
+            "content": row[2],
+            "tags": parse_json_field(row[3]),
+            "energyLevel": row[4],
+            "firstHeardYear": row[5],
+            "firstHeardPeriod": row[6],
+            "likeCount": row[7],
+            "createdAt": row[8],
+            "updatedAt": row[9],
+            "song": {
+                "id": row[1],
+                "title": row[10],
+                "coverUrl": ensure_https_url(row[11]),
+                "artistName": row[12]
+            },
+            "comments": comments
+        }
+        moments.append(moment)
+
+    conn.close()
+    return {"success": True, "data": moments}
+
+@app.post("/api/admin/moments")
+async def create_moment(moment: MusicMoment, username: str = Depends(verify_token)):
+    """创建音乐朋友圈"""
+    conn = sqlite3.connect('music.db')
+    cursor = conn.cursor()
+
+    # Verify song exists
+    cursor.execute('SELECT id FROM songs WHERE id=?', (moment.songId,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Song not found")
+
+    moment_id = str(uuid.uuid4())
+    now = get_current_time()
+
+    cursor.execute('''
+        INSERT INTO music_moments (id, songId, content, tags, energyLevel, firstHeardYear, firstHeardPeriod, likeCount, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        moment_id, moment.songId, moment.content, serialize_json_field(moment.tags),
+        moment.energyLevel, moment.firstHeardYear, moment.firstHeardPeriod,
+        0, now, now
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "data": {"id": moment_id, **moment.dict()}}
+
+@app.put("/api/admin/moments/{moment_id}")
+async def update_moment(moment_id: str, moment: MusicMoment, username: str = Depends(verify_token)):
+    """更新音乐朋友圈"""
+    conn = sqlite3.connect('music.db')
+    cursor = conn.cursor()
+
+    now = get_current_time()
+
+    cursor.execute('''
+        UPDATE music_moments
+        SET content=?, tags=?, energyLevel=?, firstHeardYear=?, firstHeardPeriod=?, updatedAt=?
+        WHERE id=?
+    ''', (
+        moment.content, serialize_json_field(moment.tags), moment.energyLevel,
+        moment.firstHeardYear, moment.firstHeardPeriod, now, moment_id
+    ))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Moment not found")
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "data": {"id": moment_id, **moment.dict()}}
+
+@app.delete("/api/admin/moments/{moment_id}")
+async def delete_moment(moment_id: str, username: str = Depends(verify_token)):
+    """删除音乐朋友圈"""
+    conn = sqlite3.connect('music.db')
+    cursor = conn.cursor()
+
+    cursor.execute('DELETE FROM music_moments WHERE id=?', (moment_id,))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Moment not found")
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "message": "Moment deleted successfully"}
+
+# @app.post("/api/admin/moments/{moment_id}/comments")
+# async def add_moment_comment(moment_id: str, comment: MomentComment, username: str = Depends(verify_token)):
+#     """为音乐朋友圈添加跟评"""
+#     conn = sqlite3.connect('music.db')
+#     cursor = conn.cursor()
+
+#     # Verify moment exists
+#     cursor.execute('SELECT id FROM music_moments WHERE id=?', (moment_id,))
+#     if not cursor.fetchone():
+#         conn.close()
+#         raise HTTPException(status_code=404, detail="Moment not found")
+
+#     comment_id = str(uuid.uuid4())
+#     now = get_current_time()
+
+#     cursor.execute('''
+#         INSERT INTO moment_comments (id, momentId, content, listenDate, location, createdAt)
+#         VALUES (?, ?, ?, ?, ?, ?)
+#     ''', (comment_id, moment_id, comment.content, comment.listenDate, comment.location, now))
+
+#     conn.commit()
+#     conn.close()
+
+#     return {"success": True, "data": {"id": comment_id, **comment.dict()}}
+
+@app.delete("/api/admin/moments/{moment_id}/comments/{comment_id}")
+async def delete_moment_comment(moment_id: str, comment_id: str, username: str = Depends(verify_token)):
+    """删除朋友圈跟评"""
+    conn = sqlite3.connect('music.db')
+    cursor = conn.cursor()
+
+    cursor.execute('DELETE FROM moment_comments WHERE id=? AND momentId=?', (comment_id, moment_id))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "message": "Comment deleted successfully"}
+
+init_db()
 @app.post("/api/admin/upload")
 async def upload_file(file: UploadFile = File(...), username: str = Depends(verify_token)):
     if not file.filename:
@@ -1403,6 +1657,192 @@ async def batch_import(request: ImportBatchRequest, username: str = Depends(veri
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"批量导入失败: {str(e)}")
+    finally:
+        conn.close()
+
+# ============= Music Moments Admin API =============
+
+@app.post("/api/admin/moments")
+async def create_moment(moment: MusicMoment, user: dict = Depends(verify_token)):
+    """创建音乐朋友圈（管理员）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    try:
+        # Check if song exists
+        cursor.execute("SELECT id FROM songs WHERE id = ?", (moment.songId,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Song not found")
+
+        # Check if moment already exists for this song
+        cursor.execute("SELECT id FROM music_moments WHERE songId = ?", (moment.songId,))
+        existing = cursor.fetchone()
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail="这首歌已经有朋友圈了，请添加评论而不是创建新的朋友圈"
+            )
+
+        moment_id = str(uuid.uuid4())
+        now = get_current_time()
+
+        cursor.execute("""
+            INSERT INTO music_moments (id, songId, content, tags, energyLevel, firstHeardYear, firstHeardPeriod, likeCount, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            moment_id, moment.songId, moment.content, json.dumps(moment.tags),
+            moment.energyLevel, moment.firstHeardYear, moment.firstHeardPeriod,
+            0, now, now
+        ))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "data": {
+                "id": moment_id,
+                "songId": moment.songId,
+                "content": moment.content,
+                "tags": moment.tags,
+                "energyLevel": moment.energyLevel,
+                "firstHeardYear": moment.firstHeardYear,
+                "firstHeardPeriod": moment.firstHeardPeriod,
+                "likeCount": 0,
+                "createdAt": now,
+                "updatedAt": now
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.post("/api/admin/moments/{moment_id}/comments")
+async def add_comment(moment_id: str, comment: MomentCommentCreate, user: dict = Depends(verify_token)):
+    """添加朋友圈评论（管理员）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    try:
+        # Check if moment exists
+        cursor.execute("SELECT id FROM music_moments WHERE id = ?", (moment_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Moment not found")
+
+        comment_id = str(uuid.uuid4())
+        now = get_current_time()
+
+        cursor.execute("""
+            INSERT INTO moment_comments (id, momentId, content, listenDate, location, createdAt)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            comment_id, moment_id, comment.content,
+            comment.listenDate, comment.location, now
+        ))
+
+        conn.commit()
+
+        return {
+            "success": True,
+            "data": {
+                "id": comment_id,
+                "momentId": moment_id,
+                "content": comment.content,
+                "listenDate": comment.listenDate,
+                "location": comment.location,
+                "createdAt": now
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.put("/api/admin/moments/{moment_id}")
+async def update_moment(moment_id: str, moment: MusicMoment, user: dict = Depends(verify_token)):
+    """更新音乐朋友圈（管理员）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM music_moments WHERE id = ?", (moment_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Moment not found")
+
+        now = get_current_time()
+
+        cursor.execute("""
+            UPDATE music_moments
+            SET content = ?, tags = ?, energyLevel = ?, firstHeardYear = ?, firstHeardPeriod = ?, updatedAt = ?
+            WHERE id = ?
+        """, (
+            moment.content, json.dumps(moment.tags), moment.energyLevel,
+            moment.firstHeardYear, moment.firstHeardPeriod, now, moment_id
+        ))
+
+        conn.commit()
+
+        return {"success": True, "message": "Moment updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.delete("/api/admin/moments/{moment_id}")
+async def delete_moment(moment_id: str, user: dict = Depends(verify_token)):
+    """删除音乐朋友圈（管理员）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM music_moments WHERE id = ?", (moment_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Moment not found")
+
+        # Comments will be deleted automatically due to CASCADE
+        cursor.execute("DELETE FROM music_moments WHERE id = ?", (moment_id,))
+
+        conn.commit()
+
+        return {"success": True, "message": "Moment deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.delete("/api/admin/moments/{moment_id}/comments/{comment_id}")
+async def delete_comment(moment_id: str, comment_id: str, user: dict = Depends(verify_token)):
+    """删除朋友圈评论（管理员）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM moment_comments WHERE id = ? AND momentId = ?", (comment_id, moment_id))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Comment not found")
+
+        cursor.execute("DELETE FROM moment_comments WHERE id = ?", (comment_id,))
+
+        conn.commit()
+
+        return {"success": True, "message": "Comment deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
 

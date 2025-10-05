@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { 
-  ChevronLeft, 
+import {
+  ChevronLeft,
   ChevronRight,
   Menu,
   Play,
@@ -15,7 +15,8 @@ import {
   Library,
   Smile,
   Users,
-  Settings
+  Settings,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,6 +32,11 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
 
   const menuItems = [
+    {
+      icon: Heart,
+      label: '音乐朋友圈',
+      href: '/moments',
+    },
     {
       icon: Play,
       label: '播放器',
