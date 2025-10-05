@@ -101,8 +101,12 @@ export default function MomentsPage() {
       );
     }
 
-    return moments.map((moment) => (
-      <Card key={moment.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+    // 瀑布流布局：将moments分成左右两列
+    const leftColumnMoments = moments.filter((_, index) => index % 2 === 0);
+    const rightColumnMoments = moments.filter((_, index) => index % 2 === 1);
+
+    const renderMomentCard = (moment: MusicMoment) => (
+      <Card key={moment.id} className="overflow-hidden hover:shadow-lg transition-shadow mb-6 py-1">
         <CardContent className="p-6">
           {/* Song Info */}
           <div
@@ -185,7 +189,29 @@ export default function MomentsPage() {
           )}
         </CardContent>
       </Card>
-    ));
+    );
+
+    return (
+      <>
+        {/* 移动端：单列 */}
+        <div className="lg:hidden space-y-6">
+          {moments.map((moment) => renderMomentCard(moment))}
+        </div>
+
+        {/* 桌面端：瀑布流两列 */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
+          {/* 左列 */}
+          <div>
+            {leftColumnMoments.map((moment) => renderMomentCard(moment))}
+          </div>
+
+          {/* 右列 */}
+          <div>
+            {rightColumnMoments.map((moment) => renderMomentCard(moment))}
+          </div>
+        </div>
+      </>
+    );
   };
 
   return (
@@ -193,10 +219,10 @@ export default function MomentsPage() {
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content - 禁用滚动，底部留出播放器空间 */}
+      {/* Main Content - 铺满屏幕，左右两列瀑布流 */}
       <div className="flex-1 overflow-hidden pb-24">
-        <div className="container max-w-4xl mx-auto p-6 space-y-6 h-full overflow-y-auto">
-          <div className="flex items-center justify-between">
+        <div className="h-full overflow-y-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">音乐朋友圈</h1>
           </div>
 
