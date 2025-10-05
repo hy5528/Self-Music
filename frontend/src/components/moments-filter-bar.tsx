@@ -10,12 +10,12 @@ import { momentsAPI } from '@/lib/moments-api';
 interface MomentsFilterBarProps {
   tags: string[];
   energyLevel: number | null;
-  year: number | null;
-  period: string | null;
+  years: number[];
+  periods: string[];
   onTagsChange: (tags: string[]) => void;
   onEnergyLevelChange: (level: number | null) => void;
-  onYearChange: (year: number | null) => void;
-  onPeriodChange: (period: string | null) => void;
+  onYearsChange: (years: number[]) => void;
+  onPeriodsChange: (periods: string[]) => void;
   onReset: () => void;
   className?: string;
 }
@@ -23,12 +23,12 @@ interface MomentsFilterBarProps {
 export function MomentsFilterBar({
   tags,
   energyLevel,
-  year,
-  period,
+  years,
+  periods,
   onTagsChange,
   onEnergyLevelChange,
-  onYearChange,
-  onPeriodChange,
+  onYearsChange,
+  onPeriodsChange,
   onReset,
   className
 }: MomentsFilterBarProps) {
@@ -64,6 +64,22 @@ export function MomentsFilterBar({
     }
   };
 
+  const toggleYear = (year: number) => {
+    if (years.includes(year)) {
+      onYearsChange(years.filter(y => y !== year));
+    } else {
+      onYearsChange([...years, year]);
+    }
+  };
+
+  const togglePeriod = (period: string) => {
+    if (periods.includes(period)) {
+      onPeriodsChange(periods.filter(p => p !== period));
+    } else {
+      onPeriodsChange([...periods, period]);
+    }
+  };
+
   const getEnergyLevelText = (level: number) => {
     if (level <= -3) return '极度治愈';
     if (level <= -1) return '舒缓放松';
@@ -72,7 +88,7 @@ export function MomentsFilterBar({
     return '极度激情';
   };
 
-  const hasActiveFilters = tags.length > 0 || energyLevel !== null || year !== null || period !== null;
+  const hasActiveFilters = tags.length > 0 || energyLevel !== null || years.length > 0 || periods.length > 0;
 
   return (
     <div className={cn("p-4 bg-background/50 backdrop-blur-sm rounded-lg border", className)}>
@@ -151,9 +167,9 @@ export function MomentsFilterBar({
               {availableYears.map((y) => (
                 <Button
                   key={y}
-                  variant={year === y ? "default" : "outline"}
+                  variant={years.includes(y) ? "default" : "outline"}
                   size="sm"
-                  onClick={() => onYearChange(year === y ? null : y)}
+                  onClick={() => toggleYear(y)}
                   className="h-7 text-xs"
                 >
                   {y}
@@ -171,9 +187,9 @@ export function MomentsFilterBar({
               {availablePeriods.map((p) => (
                 <Button
                   key={p}
-                  variant={period === p ? "default" : "outline"}
+                  variant={periods.includes(p) ? "default" : "outline"}
                   size="sm"
-                  onClick={() => onPeriodChange(period === p ? null : p)}
+                  onClick={() => togglePeriod(p)}
                   className="h-7 text-xs"
                 >
                   {p}

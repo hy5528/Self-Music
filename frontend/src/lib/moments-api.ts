@@ -7,7 +7,7 @@ export interface MomentFilters {
   limit?: number;
   tags?: string;
   energyLevel?: number;
-  year?: number;
+  year?: string;
   period?: string;
 }
 

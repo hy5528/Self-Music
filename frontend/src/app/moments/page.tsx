@@ -22,8 +22,8 @@ export default function MomentsPage() {
   const [filters, setFilters] = useState({
     tags: [] as string[],
     energyLevel: null as number | null,
-    year: null as number | null,
-    period: null as string | null
+    years: [] as number[],
+    periods: [] as string[]
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -42,8 +42,8 @@ export default function MomentsPage() {
         limit: pageSize,
         tags: filters.tags.length > 0 ? filters.tags.join(',') : undefined,
         energyLevel: filters.energyLevel ?? undefined,
-        year: filters.year ?? undefined,
-        period: filters.period || undefined
+        year: filters.years.length > 0 ? filters.years.join(',') : undefined,
+        period: filters.periods.length > 0 ? filters.periods.join(',') : undefined
       });
       console.log('Moments response:', response);
 
@@ -102,13 +102,13 @@ export default function MomentsPage() {
     }
   };
 
-  const handleFilterChange = (key: keyof typeof filters, value: string[] | number | null | string) => {
+  const handleFilterChange = (key: keyof typeof filters, value: string[] | number[] | number | null) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1); // 筛选时重置到第一页
   };
 
   const handleResetFilters = () => {
-    setFilters({ tags: [], energyLevel: null, year: null, period: null });
+    setFilters({ tags: [], energyLevel: null, years: [], periods: [] });
     setCurrentPage(1);
   };
 
@@ -278,12 +278,12 @@ export default function MomentsPage() {
             <MomentsFilterBar
               tags={filters.tags}
               energyLevel={filters.energyLevel}
-              year={filters.year}
-              period={filters.period}
+              years={filters.years}
+              periods={filters.periods}
               onTagsChange={(value) => handleFilterChange('tags', value)}
               onEnergyLevelChange={(value) => handleFilterChange('energyLevel', value)}
-              onYearChange={(value) => handleFilterChange('year', value)}
-              onPeriodChange={(value) => handleFilterChange('period', value)}
+              onYearsChange={(value) => handleFilterChange('years', value)}
+              onPeriodsChange={(value) => handleFilterChange('periods', value)}
               onReset={handleResetFilters}
             />
           </div>

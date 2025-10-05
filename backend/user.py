@@ -1414,7 +1414,7 @@ async def get_moments(
     limit: int = Query(20, ge=1, le=100),
     tags: Optional[str] = Query(None),
     energyLevel: Optional[int] = Query(None),
-    year: Optional[int] = Query(None),
+    year: Optional[str] = Query(None),
     period: Optional[str] = Query(None)
 ):
     """获取音乐朋友圈列表（每首歌只有一个朋友圈，后续分享为评论）"""
@@ -1430,17 +1430,19 @@ async def get_moments(
     if tags:
         tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
 
+    # 解析年份过滤条件
+    year_list = []
+    if year:
+        year_list = [int(y.strip()) for y in year.split(",") if y.strip()]
+
+    # 解析时期过滤条件
+    period_list = []
+    if period:
+        period_list = [p.strip() for p in period.split(",") if p.strip()]
+
     if energyLevel is not None:
         conditions.append("m.energyLevel = ?")
         params.append(energyLevel)
-
-    if year is not None:
-        conditions.append("m.firstHeardYear = ?")
-        params.append(year)
-
-    if period:
-        conditions.append("m.firstHeardPeriod = ?")
-        params.append(period)
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
@@ -1459,14 +1461,26 @@ async def get_moments(
     filtered_rows = []
     for row in all_rows:
         moment_tags = parse_json_field(row[3])  # row[3] is tags field
+        moment_year = row[5]  # row[5] is firstHeardYear
+        moment_period = row[6]  # row[6] is firstHeardPeriod
 
-        # If tag filter is specified, check if any of the filter tags match
+        # Check tag filter
         if tag_list:
             tag_match = any(tag in moment_tags for tag in tag_list)
-            if tag_match:
-                filtered_rows.append(row)
-        else:
-            filtered_rows.append(row)
+            if not tag_match:
+                continue
+
+        # Check year filter
+        if year_list:
+            if moment_year not in year_list:
+                continue
+
+        # Check period filter
+        if period_list:
+            if moment_period not in period_list:
+                continue
+
+        filtered_rows.append(row)
 
     # Calculate pagination
     total = len(filtered_rows)
