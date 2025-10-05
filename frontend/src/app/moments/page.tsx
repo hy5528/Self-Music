@@ -11,6 +11,8 @@ import { api } from '@/lib/api';
 import { Sidebar } from '@/components/sidebar';
 import { MomentsFilterBar } from '@/components/moments-filter-bar';
 import { Pagination } from '@/components/ui/pagination';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { motion } from 'framer-motion';
 
 export default function MomentsPage() {
   const [moments, setMoments] = useState<MusicMoment[]>([]);
@@ -264,47 +266,67 @@ export default function MomentsPage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
+    <motion.div
+      className="h-full bg-background lg:flex"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
       <Sidebar />
 
-      {/* Main Content - 铺满屏幕，左右两列瀑布流 */}
-      <div className="flex-1 overflow-hidden pb-24">
-        <div className="h-full overflow-y-auto px-6 py-6 flex flex-col gap-6">
-          {/* 标题和筛选栏 */}
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold">音乐朋友圈</h1>
+      <motion.div
+        className="flex-1 flex flex-col relative overflow-hidden"
+        initial={{ x: 50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        {/* 标题和筛选栏 - 固定在顶部 */}
+        <motion.div
+          className="flex-shrink-0 p-4 lg:p-6 space-y-4"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <h1 className="text-2xl lg:text-3xl font-bold">音乐朋友圈</h1>
 
-            <MomentsFilterBar
-              tags={filters.tags}
-              energyLevel={filters.energyLevel}
-              years={filters.years}
-              periods={filters.periods}
-              onTagsChange={(value) => handleFilterChange('tags', value)}
-              onEnergyLevelChange={(value) => handleFilterChange('energyLevel', value)}
-              onYearsChange={(value) => handleFilterChange('years', value)}
-              onPeriodsChange={(value) => handleFilterChange('periods', value)}
-              onReset={handleResetFilters}
-            />
-          </div>
+          <MomentsFilterBar
+            tags={filters.tags}
+            energyLevel={filters.energyLevel}
+            years={filters.years}
+            periods={filters.periods}
+            onTagsChange={(value) => handleFilterChange('tags', value)}
+            onEnergyLevelChange={(value) => handleFilterChange('energyLevel', value)}
+            onYearsChange={(value) => handleFilterChange('years', value)}
+            onPeriodsChange={(value) => handleFilterChange('periods', value)}
+            onReset={handleResetFilters}
+          />
+        </motion.div>
 
-          {/* 内容区域 */}
-          <div className="flex-1">
-            {renderContent()}
-          </div>
+        {/* 内容区域 - 可滚动 */}
+        <motion.div
+          className="flex-1 overflow-hidden"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <ScrollArea className="h-full">
+            <div className="px-4 lg:px-6 pb-6">
+              {renderContent()}
 
-          {/* 分页 */}
-          {!isLoading && !error && moments.length > 0 && totalPages > 1 && (
-            <div className="pb-4">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
+              {/* 分页 */}
+              {!isLoading && !error && moments.length > 0 && totalPages > 1 && (
+                <div className="mt-6">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+          </ScrollArea>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
