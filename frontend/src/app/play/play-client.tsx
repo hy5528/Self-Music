@@ -347,7 +347,7 @@ export default function PlayClient() {
         </div>
 
         {/* Player Layout - 移动端可滚动 */}
-        <div className="flex-1 overflow-y-auto lg:overflow-hidden overscroll-contain">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden lg:overflow-hidden overscroll-contain">
           <PlayerLayout className="pt-16 lg:pt-0">
             {/* Left Section - Album Cover and Song Info */}
             <PlayerLeftSection>
