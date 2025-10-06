@@ -14,7 +14,6 @@ import os
 import shutil
 import requests
 from datetime import datetime, timedelta
-from mutagen import File as MutagenFile
 import mimetypes
 import yaml
 

@@ -327,7 +327,7 @@ export default function PlayClient() {
   const displayLyrics = currentSong ? currentLyrics : defaultLyrics;
 
   return (
-    <div className="h-full bg-background relative overflow-hidden lg:flex">
+    <div className="h-full bg-background relative lg:flex lg:overflow-hidden">
       {/* Dynamic Ambient Glow Background */}
       <AmbientGlow
         imageUrl={currentSong?.coverUrl || displaySong.coverUrl}
@@ -338,7 +338,7 @@ export default function PlayClient() {
       
       {/* Sidebar - Mobile: Fixed overlay, Desktop: Takes layout space */}
       <Sidebar />
-      
+
       {/* Main Content - Full width on mobile, flex-1 on desktop */}
       <div className="flex-1 flex flex-col relative z-10">
         {/* Theme Toggle */}
@@ -346,66 +346,68 @@ export default function PlayClient() {
           <ThemeToggle />
         </div>
 
-        {/* Player Layout */}
-        <PlayerLayout className="pt-16 lg:pt-0">
-          {/* Left Section - Album Cover and Song Info */}
-          <PlayerLeftSection>
-            <AlbumCover song={displaySong} />
-            <SongInfo song={displaySong} />
+        {/* Player Layout - 移动端可滚动 */}
+        <div className="flex-1 overflow-y-auto lg:overflow-hidden overscroll-contain">
+          <PlayerLayout className="pt-16 lg:pt-0">
+            {/* Left Section - Album Cover and Song Info */}
+            <PlayerLeftSection>
+              <AlbumCover song={displaySong} />
+              <SongInfo song={displaySong} />
 
-            {/* Song Moment Card - Mobile Only */}
-            {currentMoment && isMomentVisible && (
-              <div className="w-full max-w-md mt-4 lg:hidden">
-                <LightSongMoments
-                  moment={currentMoment}
-                  onClose={() => setIsMomentVisible(false)}
-                />
-              </div>
-            )}
+              {/* Song Moment Card - Mobile Only */}
+              {currentMoment && isMomentVisible && (
+                <div className="w-full max-w-md mt-4 lg:hidden">
+                  <LightSongMoments
+                    moment={currentMoment}
+                    onClose={() => setIsMomentVisible(false)}
+                  />
+                </div>
+              )}
 
-            <PlayerControls
-              isPlaying={isPlaying}
-              isShuffle={shuffleMode}
-              repeatMode={repeatMode}
-              isMuted={volume === 0}
-              isLiked={false}
-              volume={volume * 100}
-              currentTime={currentTime}
-              duration={duration}
-              onPlayPause={handlePlayPause}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              onShuffle={handleShuffle}
-              onRepeat={handleRepeat}
-              onMute={handleMute}
-              onLike={handleLike}
-              onVolumeChange={handleVolumeChange}
-              onSeek={handleSeek}
-              onFullscreen={handleFullscreenLyrics}
-              className="w-full max-w-md"
-            />
-          </PlayerLeftSection>
+              <PlayerControls
+                isPlaying={isPlaying}
+                isShuffle={shuffleMode}
+                repeatMode={repeatMode}
+                isMuted={volume === 0}
+                isLiked={false}
+                volume={volume * 100}
+                currentTime={currentTime}
+                duration={duration}
+                onPlayPause={handlePlayPause}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onShuffle={handleShuffle}
+                onRepeat={handleRepeat}
+                onMute={handleMute}
+                onLike={handleLike}
+                onVolumeChange={handleVolumeChange}
+                onSeek={handleSeek}
+                onFullscreen={handleFullscreenLyrics}
+                className="w-full max-w-md"
+              />
+            </PlayerLeftSection>
 
-          {/* Right Section - Lyrics and Moments (Desktop) */}
-          <PlayerRightSection>
-            <LyricsCard
-              lyrics={displayLyrics}
-              currentTime={currentTime}
-              onLyricClick={handleLyricClick}
-              onFullscreen={handleFullscreenLyrics}
-            />
+            {/* Right Section - Lyrics and Moments (Desktop) */}
+            <PlayerRightSection>
+              <LyricsCard
+                lyrics={displayLyrics}
+                currentTime={currentTime}
+                onLyricClick={handleLyricClick}
+                onFullscreen={handleFullscreenLyrics}
+              />
 
-            {/* Song Moment Card - Desktop Only - 在歌词下方 */}
-            {currentMoment && isMomentVisible && (
-              <div className="hidden lg:block w-full mt-6">
-                <LightSongMoments
-                  moment={currentMoment}
-                  onClose={() => setIsMomentVisible(false)}
-                />
-              </div>
-            )}
-          </PlayerRightSection>
-        </PlayerLayout>
+              {/* Song Moment Card - Desktop Only - 在歌词下方 */}
+              {currentMoment && isMomentVisible && (
+                <div className="hidden lg:block w-full mt-6">
+                  <LightSongMoments
+                    moment={currentMoment}
+                    onClose={() => setIsMomentVisible(false)}
+                  />
+                </div>
+              )}
+            </PlayerRightSection>
+          </PlayerLayout>
+        </div>
       </div>
 
       {/* Playlist Panel */}
