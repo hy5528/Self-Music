@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { momentsAPI } from '@/lib/moments-api';
 import type { MusicMoment } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,7 @@ export default function MomentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { replacePlaylistAndPlay } = usePlayerStore();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // 筛选和分页状态
   const [filters, setFilters] = useState({
@@ -29,7 +30,7 @@ export default function MomentsPage() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 10;
+  const pageSize = 24;
 
   useEffect(() => {
     loadMoments();
@@ -116,6 +117,13 @@ export default function MomentsPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Scroll to top when page changes
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = 0;
+      }
+    }
   };
 
   const getEnergyLevelText = (level: number) => {
@@ -280,26 +288,14 @@ export default function MomentsPage() {
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        {/* 标题和筛选栏 - 固定在顶部 */}
+        {/* 标题 - 固定在顶部 */}
         <motion.div
-          className="flex-shrink-0 p-4 lg:p-6 space-y-4"
+          className="flex-shrink-0 p-4 lg:p-6"
           initial={{ y: -30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <h1 className="text-2xl lg:text-3xl font-bold">音乐朋友圈</h1>
-
-          <MomentsFilterBar
-            tags={filters.tags}
-            energyLevel={filters.energyLevel}
-            years={filters.years}
-            periods={filters.periods}
-            onTagsChange={(value) => handleFilterChange('tags', value)}
-            onEnergyLevelChange={(value) => handleFilterChange('energyLevel', value)}
-            onYearsChange={(value) => handleFilterChange('years', value)}
-            onPeriodsChange={(value) => handleFilterChange('periods', value)}
-            onReset={handleResetFilters}
-          />
         </motion.div>
 
         {/* 内容区域 - 可滚动 */}
@@ -309,8 +305,21 @@ export default function MomentsPage() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <ScrollArea className="h-full">
-            <div className="px-4 lg:px-6 pb-6">
+          <ScrollArea className="h-full" ref={scrollAreaRef}>
+            <div className="px-4 lg:px-6 pb-6 space-y-4">
+              {/* 筛选栏 - 在滚动区域内 */}
+              <MomentsFilterBar
+                tags={filters.tags}
+                energyLevel={filters.energyLevel}
+                years={filters.years}
+                periods={filters.periods}
+                onTagsChange={(value) => handleFilterChange('tags', value)}
+                onEnergyLevelChange={(value) => handleFilterChange('energyLevel', value)}
+                onYearsChange={(value) => handleFilterChange('years', value)}
+                onPeriodsChange={(value) => handleFilterChange('periods', value)}
+                onReset={handleResetFilters}
+              />
+
               {renderContent()}
 
               {/* 分页 */}
