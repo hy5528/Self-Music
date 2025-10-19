@@ -1407,3 +1407,356 @@ async def get_new_songs(limit: int = Query(20, ge=1, le=50)):
     
     conn.close()
     return songs
+# Music Moments API (Public)
+@router.get("/api/moments")
+async def get_moments(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    tags: Optional[str] = Query(None),
+    energyLevel: Optional[int] = Query(None),
+    year: Optional[str] = Query(None),
+    period: Optional[str] = Query(None)
+):
+    """获取音乐朋友圈列表（每首歌只有一个朋友圈，后续分享为评论）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    # Build WHERE clause based on filters (除了tags)
+    conditions = []
+    params = []
+
+    # 解析标签过滤条件
+    tag_list = []
+    if tags:
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
+    # 解析年份过滤条件
+    year_list = []
+    if year:
+        year_list = [int(y.strip()) for y in year.split(",") if y.strip()]
+
+    # 解析时期过滤条件
+    period_list = []
+    if period:
+        period_list = [p.strip() for p in period.split(",") if p.strip()]
+
+    if energyLevel is not None:
+        conditions.append("m.energyLevel = ?")
+        params.append(energyLevel)
+
+    where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+
+    # Get all matching moments (without tag filtering in SQL)
+    cursor.execute(f"""
+        SELECT m.*, s.title, s.coverUrl, ar.name as artist_name
+        FROM music_moments m
+        JOIN songs s ON m.songId = s.id
+        JOIN artists ar ON s.artistId = ar.id
+        {where_clause}
+        ORDER BY m.createdAt DESC
+    """, params)
+    all_rows = cursor.fetchall()
+
+    # Filter by tags in Python
+    filtered_rows = []
+    for row in all_rows:
+        moment_tags = parse_json_field(row[3])  # row[3] is tags field
+        moment_year = row[5]  # row[5] is firstHeardYear
+        moment_period = row[6]  # row[6] is firstHeardPeriod
+
+        # Check tag filter
+        if tag_list:
+            tag_match = any(tag in moment_tags for tag in tag_list)
+            if not tag_match:
+                continue
+
+        # Check year filter
+        if year_list:
+            if moment_year not in year_list:
+                continue
+
+        # Check period filter
+        if period_list:
+            if moment_period not in period_list:
+                continue
+
+        filtered_rows.append(row)
+
+    # Calculate pagination
+    total = len(filtered_rows)
+    total_pages = (total + limit - 1) // limit if total > 0 else 1
+    offset = (page - 1) * limit
+
+    # Apply pagination
+    paginated_rows = filtered_rows[offset:offset + limit]
+
+    moments = []
+    for row in paginated_rows:
+        moment = {
+            "id": row[0],
+            "songId": row[1],
+            "content": row[2],
+            "tags": parse_json_field(row[3]),
+            "energyLevel": row[4],
+            "firstHeardYear": row[5],
+            "firstHeardPeriod": row[6],
+            "likeCount": row[7],
+            "createdAt": row[8],
+            "updatedAt": row[9],
+            "song": {
+                "id": row[1],
+                "title": row[10],
+                "coverUrl": ensure_https_url(row[11]),
+                "artistName": row[12]
+            }
+        }
+
+        # Get comments for this moment
+        cursor.execute("""
+            SELECT * FROM moment_comments WHERE momentId = ? ORDER BY createdAt ASC
+        """, (moment["id"],))
+        comment_rows = cursor.fetchall()
+
+        moment["comments"] = []
+        for c_row in comment_rows:
+            moment["comments"].append({
+                "id": c_row[0],
+                "momentId": c_row[1],
+                "content": c_row[2],
+                "listenDate": c_row[3],
+                "location": c_row[4],
+                "createdAt": c_row[5]
+            })
+
+        moments.append(moment)
+
+    conn.close()
+
+    return {
+        "success": True,
+        "data": moments,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "totalPages": total_pages
+    }
+
+@router.get("/api/moments/{moment_id}")
+async def get_moment(moment_id: str):
+    """获取单个音乐朋友圈详情"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT m.*, s.title, s.coverUrl, ar.name as artist_name
+        FROM music_moments m
+        JOIN songs s ON m.songId = s.id
+        JOIN artists ar ON s.artistId = ar.id
+        WHERE m.id = ?
+    """, (moment_id,))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Moment not found")
+
+    # Get comments for this moment
+    cursor.execute("""
+        SELECT * FROM moment_comments WHERE momentId = ? ORDER BY createdAt ASC
+    """, (moment_id,))
+    comment_rows = cursor.fetchall()
+
+    comments = []
+    for c_row in comment_rows:
+        comments.append({
+            "id": c_row[0],
+            "momentId": c_row[1],
+            "content": c_row[2],
+            "listenDate": c_row[3],
+            "location": c_row[4],
+            "createdAt": c_row[5]
+        })
+
+    moment = {
+        "id": row[0],
+        "songId": row[1],
+        "content": row[2],
+        "tags": parse_json_field(row[3]),
+        "energyLevel": row[4],
+        "firstHeardYear": row[5],
+        "firstHeardPeriod": row[6],
+        "likeCount": row[7],
+        "createdAt": row[8],
+        "updatedAt": row[9],
+        "song": {
+            "id": row[1],
+            "title": row[10],
+            "coverUrl": ensure_https_url(row[11]),
+            "artistName": row[12]
+        },
+        "comments": comments
+    }
+
+    conn.close()
+    return moment
+
+@router.get("/api/songs/{song_id}/moment")
+async def get_song_moment(song_id: str):
+    """获取歌曲的朋友圈（用于播放页显示）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT m.*, s.title, s.coverUrl, ar.name as artist_name
+        FROM music_moments m
+        JOIN songs s ON m.songId = s.id
+        JOIN artists ar ON s.artistId = ar.id
+        WHERE m.songId = ?
+        ORDER BY m.createdAt DESC
+        LIMIT 1
+    """, (song_id,))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return {"success": True, "data": None}
+
+    moment_id = row[0]
+
+    # Get comments for this moment
+    cursor.execute("""
+        SELECT * FROM moment_comments WHERE momentId = ? ORDER BY createdAt ASC
+    """, (moment_id,))
+    comment_rows = cursor.fetchall()
+
+    comments = []
+    for c_row in comment_rows:
+        comments.append({
+            "id": c_row[0],
+            "momentId": c_row[1],
+            "content": c_row[2],
+            "listenDate": c_row[3],
+            "location": c_row[4],
+            "createdAt": c_row[5]
+        })
+
+    moment = {
+        "id": row[0],
+        "songId": row[1],
+        "content": row[2],
+        "tags": parse_json_field(row[3]),
+        "energyLevel": row[4],
+        "firstHeardYear": row[5],
+        "firstHeardPeriod": row[6],
+        "likeCount": row[7],
+        "createdAt": row[8],
+        "updatedAt": row[9],
+        "song": {
+            "id": row[1],
+            "title": row[10],
+            "coverUrl": ensure_https_url(row[11]),
+            "artistName": row[12]
+        },
+        "comments": comments
+    }
+
+    conn.close()
+    return {"success": True, "data": moment}
+
+@router.post("/api/moments/{moment_id}/like")
+async def like_moment(moment_id: str):
+    """点赞朋友圈（无需鉴权）"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    # Check if moment exists
+    cursor.execute("SELECT id, likeCount FROM music_moments WHERE id = ?", (moment_id,))
+    moment_row = cursor.fetchone()
+
+    if not moment_row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Moment not found")
+
+    # Increment like count
+    new_like_count = (moment_row[1] or 0) + 1
+    cursor.execute("UPDATE music_moments SET likeCount = ? WHERE id = ?", (new_like_count, moment_id))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "data": {
+            "momentId": moment_id,
+            "likeCount": new_like_count
+        }
+    }
+
+@router.get("/api/moments/filters/tags")
+async def get_all_tags():
+    """获取所有已使用的标签"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT tags FROM music_moments WHERE tags IS NOT NULL AND tags != '[]'")
+    rows = cursor.fetchall()
+
+    # 收集所有标签并去重
+    all_tags = set()
+    for row in rows:
+        tags = parse_json_field(row[0])
+        if tags:
+            all_tags.update(tags)
+
+    conn.close()
+
+    return {
+        "success": True,
+        "data": sorted(list(all_tags))  # 返回排序后的标签列表
+    }
+
+@router.get("/api/moments/filters/years")
+async def get_all_years():
+    """获取所有首次听到的年份"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT DISTINCT firstHeardYear
+        FROM music_moments
+        WHERE firstHeardYear IS NOT NULL
+        ORDER BY firstHeardYear DESC
+    """)
+    rows = cursor.fetchall()
+
+    years = [row[0] for row in rows]
+
+    conn.close()
+
+    return {
+        "success": True,
+        "data": years
+    }
+
+@router.get("/api/moments/filters/periods")
+async def get_all_periods():
+    """获取所有首次听到的时期"""
+    conn = sqlite3.connect("music.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT DISTINCT firstHeardPeriod
+        FROM music_moments
+        WHERE firstHeardPeriod IS NOT NULL AND firstHeardPeriod != ''
+        ORDER BY firstHeardPeriod
+    """)
+    rows = cursor.fetchall()
+
+    periods = [row[0] for row in rows]
+
+    conn.close()
+
+    return {
+        "success": True,
+        "data": periods
+    }

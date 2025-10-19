@@ -278,3 +278,33 @@ export interface ImportBatchResult {
   reason?: string;
   localId?: string; // ID in local database if imported
 }
+
+// Music Moments types
+export interface MomentComment {
+  id: string;
+  momentId: string;
+  content: string;
+  listenDate?: string;
+  location?: string;
+  createdAt: string;
+}
+
+export interface MusicMoment {
+  id: string;
+  songId: string;
+  song?: {
+    id: string;
+    title: string;
+    coverUrl?: string;
+    artistName: string;
+  };
+  content: string;
+  tags: string[];
+  energyLevel: number; // -5 to +5, negative = restoring, positive = consuming
+  firstHeardYear?: number;
+  firstHeardPeriod?: string;
+  likeCount: number;
+  comments: MomentComment[];
+  createdAt: string;
+  updatedAt: string;
+}

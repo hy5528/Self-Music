@@ -17,6 +17,10 @@ import { AmbientGlow } from '@/components/ambient-glow';
 import { api } from '@/lib/api';
 import { PlaylistPanel } from '@/components/playlist-panel';
 import { isModernBrowser } from '@/lib/utils';
+import { LightSongMoments } from '@/components/light-song-moments';
+import { QuickShareDialog } from '@/components/quick-share-dialog';
+import { momentsAPI } from '@/lib/moments-api';
+import type { MusicMoment } from '@/types';
 
 export default function PlayClient() {
   const [isModern, setIsModern] = useState(true);
@@ -59,6 +63,10 @@ export default function PlayClient() {
   } = usePlayerStore();
 
   const [isFullscreenLyrics, setIsFullscreenLyrics] = useState(false);
+  const [currentMoment, setCurrentMoment] = useState<MusicMoment | null>(null);
+  const [isMomentVisible, setIsMomentVisible] = useState(true);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const searchParams = useSearchParams();
   const handledParamsRef = useRef(false);
 
@@ -66,6 +74,35 @@ export default function PlayClient() {
   useEffect(() => {
     initializePlaylist();
   }, [initializePlaylist]);
+
+  // 检查管理员状态
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    setIsAdmin(!!token);
+  }, []);
+
+  // 获取当前歌曲的朋友圈
+  const fetchCurrentMoment = async () => {
+    if (!currentSong) {
+      setCurrentMoment(null);
+      return;
+    }
+
+    try {
+      const response = await momentsAPI.getSongMoment(currentSong.id);
+      if (response.success) {
+        setCurrentMoment(response.data || null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch moment:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentMoment();
+    setIsMomentVisible(true); // 切换歌曲时重新显示朋友圈
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSong?.id]);
 
   // 处理通过链接参数指定的播放内容：?playlist=ID 或 ?music=ID / ?song=ID
   useEffect(() => {
@@ -177,7 +214,13 @@ export default function PlayClient() {
   const handleShuffle = () => toggleShuffle();
   const handleRepeat = () => toggleRepeat();
   const handleMute = () => setVolume(volume === 0 ? 0.75 : 0);
-  const handleLike = () => console.log('Like song:', currentSong?.title);
+  const handleLike = () => {
+    if (isAdmin) {
+      setIsShareDialogOpen(true);
+    } else {
+      console.log('Like song:', currentSong?.title);
+    }
+  };
   const handleVolumeChange = (value: number[]) => setVolume(value[0] / 100);
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
@@ -284,7 +327,7 @@ export default function PlayClient() {
   const displayLyrics = currentSong ? currentLyrics : defaultLyrics;
 
   return (
-    <div className="h-full bg-background relative overflow-hidden lg:flex">
+    <div className="h-full bg-background relative lg:flex lg:overflow-hidden">
       {/* Dynamic Ambient Glow Background */}
       <AmbientGlow
         imageUrl={currentSong?.coverUrl || displaySong.coverUrl}
@@ -295,7 +338,7 @@ export default function PlayClient() {
       
       {/* Sidebar - Mobile: Fixed overlay, Desktop: Takes layout space */}
       <Sidebar />
-      
+
       {/* Main Content - Full width on mobile, flex-1 on desktop */}
       <div className="flex-1 flex flex-col relative z-10">
         {/* Theme Toggle */}
@@ -303,45 +346,68 @@ export default function PlayClient() {
           <ThemeToggle />
         </div>
 
-        {/* Player Layout */}
-        <PlayerLayout className="pt-16 lg:pt-0">
-          {/* Left Section - Album Cover and Song Info */}
-          <PlayerLeftSection>
-            <AlbumCover song={displaySong} />
-            <SongInfo song={displaySong} />
-            <PlayerControls
-              isPlaying={isPlaying}
-              isShuffle={shuffleMode}
-              repeatMode={repeatMode}
-              isMuted={volume === 0}
-              isLiked={false}
-              volume={volume * 100}
-              currentTime={currentTime}
-              duration={duration}
-              onPlayPause={handlePlayPause}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              onShuffle={handleShuffle}
-              onRepeat={handleRepeat}
-              onMute={handleMute}
-              onLike={handleLike}
-              onVolumeChange={handleVolumeChange}
-              onSeek={handleSeek}
-              onFullscreen={handleFullscreenLyrics}
-              className="w-full max-w-md"
-            />
-          </PlayerLeftSection>
+        {/* Player Layout - 移动端可滚动 */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden lg:overflow-hidden overscroll-contain">
+          <PlayerLayout className="pt-16 lg:pt-0">
+            {/* Left Section - Album Cover and Song Info */}
+            <PlayerLeftSection>
+              <AlbumCover song={displaySong} />
+              <SongInfo song={displaySong} />
 
-          {/* Right Section - Lyrics */}
-          <PlayerRightSection>
-            <LyricsCard
-              lyrics={displayLyrics}
-              currentTime={currentTime}
-              onLyricClick={handleLyricClick}
-              onFullscreen={handleFullscreenLyrics}
-            />
-          </PlayerRightSection>
-        </PlayerLayout>
+              {/* Song Moment Card - Mobile Only */}
+              {currentMoment && isMomentVisible && (
+                <div className="w-full max-w-md mt-4 lg:hidden">
+                  <LightSongMoments
+                    moment={currentMoment}
+                    onClose={() => setIsMomentVisible(false)}
+                  />
+                </div>
+              )}
+
+              <PlayerControls
+                isPlaying={isPlaying}
+                isShuffle={shuffleMode}
+                repeatMode={repeatMode}
+                isMuted={volume === 0}
+                isLiked={false}
+                volume={volume * 100}
+                currentTime={currentTime}
+                duration={duration}
+                onPlayPause={handlePlayPause}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onShuffle={handleShuffle}
+                onRepeat={handleRepeat}
+                onMute={handleMute}
+                onLike={handleLike}
+                onVolumeChange={handleVolumeChange}
+                onSeek={handleSeek}
+                onFullscreen={handleFullscreenLyrics}
+                className="w-full max-w-md"
+              />
+            </PlayerLeftSection>
+
+            {/* Right Section - Lyrics and Moments (Desktop) */}
+            <PlayerRightSection>
+              <LyricsCard
+                lyrics={displayLyrics}
+                currentTime={currentTime}
+                onLyricClick={handleLyricClick}
+                onFullscreen={handleFullscreenLyrics}
+              />
+
+              {/* Song Moment Card - Desktop Only - 在歌词下方 */}
+              {currentMoment && isMomentVisible && (
+                <div className="hidden lg:block w-full mt-6">
+                  <LightSongMoments
+                    moment={currentMoment}
+                    onClose={() => setIsMomentVisible(false)}
+                  />
+                </div>
+              )}
+            </PlayerRightSection>
+          </PlayerLayout>
+        </div>
       </div>
 
       {/* Playlist Panel */}
@@ -357,6 +423,16 @@ export default function PlayClient() {
         songTitle={displaySong.title}
         artistName={displaySong.artist.name}
       />
+
+      {/* Quick Share Dialog */}
+      {isAdmin && (
+        <QuickShareDialog
+          isOpen={isShareDialogOpen}
+          onClose={() => setIsShareDialogOpen(false)}
+          song={currentSong}
+          onSuccess={fetchCurrentMoment}
+        />
+      )}
     </div>
   );
 }
