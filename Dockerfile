@@ -63,17 +63,9 @@ VOLUME /data
 # Expose the port Nginx is listening on
 EXPOSE 80
 
-# Copy and set entryp
-COPY docker-entrypoint.sh /usr/local/bin
+# Copy and set entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
 
-RUN apk add --no-cache npm python3 youtube-dl \
-    && npm install -g @unblockneteasemusic/server NeteaseCloudMusicApi \
-    && wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp \
-    && chmod +x /usr/local/bin/yt-dlp \
-    && chmod +x /docker-entrypoint.sh
-
-ENV NODE_TLS_REJECT_UNAUTHORIZED=0
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD ["npx", "NeteaseCloudMusicApi"]
+CMD ["/usr/bin/supervisord"]
