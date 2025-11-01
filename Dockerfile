@@ -63,9 +63,8 @@ VOLUME /data
 # Expose the port Nginx is listening on
 EXPOSE 80
 
-# Copy and set entrypoint
-
-COPY --from=builder /app/docker-entrypoint.sh /docker-entrypoint.sh
+# Copy and set entryp
+COPY docker-entrypoint.sh /usr/local/bin
 
 RUN apk add --no-cache npm python3 youtube-dl \
     && npm install -g @unblockneteasemusic/server NeteaseCloudMusicApi \
