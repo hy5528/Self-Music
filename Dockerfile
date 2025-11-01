@@ -1,5 +1,5 @@
 # Stage 1: Base image with all runtimes
-FROM debian:bullseye-slim AS base
+FROM --platform=$BUILDPLATFORM debian:bullseye-slim AS base
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
