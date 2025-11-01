@@ -64,9 +64,6 @@ VOLUME /data
 EXPOSE 80
 
 # Copy and set entrypoint
-COPY --from=builder /app/out/renderer /usr/share/nginx/html
-
-COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf
 
 COPY --from=builder /app/docker-entrypoint.sh /docker-entrypoint.sh
 
