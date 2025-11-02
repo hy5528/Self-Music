@@ -65,8 +65,7 @@ EXPOSE 80
 
 # Copy and set entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN RUN apk add --no-cache npm python3 youtube-dl \
-    && npm install -g @unblockneteasemusic/server NeteaseCloudMusicApi \
+RUN npm install -g @unblockneteasemusic/server NeteaseCloudMusicApi \
     && wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp \
     && chmod +x /usr/local/bin/yt-dlp \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
