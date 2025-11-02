@@ -25,7 +25,8 @@ COPY frontend/ .
 ARG NEXT_PUBLIC_API_URL=/api
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN pnpm build
-RUN npm install -g @unblockneteasemusic/server NeteaseCloudMusicApi
+RUN apk add --no-cache npm python3 youtube-dl \
+    && npm install -g @unblockneteasemusic/server NeteaseCloudMusicApi
 
 # Stage 3: Final image
 FROM base
